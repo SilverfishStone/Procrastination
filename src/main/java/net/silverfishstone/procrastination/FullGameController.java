@@ -174,7 +174,6 @@ public class FullGameController {
         actionDeck.setLayoutY(deckY);
         actionDeck.runFunction = this::onActionDeckClicked;
         cardLayer.getChildren().add(actionDeck);
-        replenishActionDeck();
 
         // Hour deck (right)
         addPlaceholder(cx + deckSpacing - CARD_WIDTH, deckY, false, 0);
@@ -183,9 +182,8 @@ public class FullGameController {
         hourDeck.setLayoutX(cx + deckSpacing - CARD_WIDTH);
         hourDeck.setLayoutY(deckY);
         cardLayer.getChildren().add(hourDeck);
-        replenishHourDeck();
 
-        // Discard pile (center)
+        // Discard pile (center) - must be created before replenishing decks
         addPlaceholder(cx - CARD_WIDTH/2, cy - CARD_HEIGHT/2, true, 0);
         discardPile = new CardStack();
         discardPile.setStackType("discard");
@@ -193,6 +191,10 @@ public class FullGameController {
         discardPile.setLayoutX(cx - CARD_WIDTH/2);
         discardPile.setLayoutY(cy - CARD_HEIGHT/2);
         cardLayer.getChildren().add(discardPile);
+        
+        // Replenish decks after all stacks are created
+        replenishActionDeck();
+        replenishHourDeck();
     }
 
     private void createPlayerAreas(double cx, double cy) {
