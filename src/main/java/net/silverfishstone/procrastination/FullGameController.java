@@ -442,6 +442,11 @@ public class FullGameController {
      * Update displayed game statistics (deck count, discard count).
      */
     private void updateGameStatistics() {
+        // Check if UI elements have been created yet
+        if (deckCountText == null || discardCountText == null) {
+            return; // UI not initialized yet, skip update
+        }
+        
         int deckSize = actionDeckCards.size();
         int discardSize = discardPile.getCardCount();
         
