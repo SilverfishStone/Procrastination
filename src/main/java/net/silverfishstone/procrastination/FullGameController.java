@@ -788,11 +788,23 @@ public class FullGameController {
         }
 
         // Play weapon (goes in target's slot)
-        CardStack targetSlot = playerSlots.get(targetPlayerIndex).get(targetSlotIndex);
-
-        // Check 3-card limit for target
-        if (roundManager.getCardCountInPlay(targetPlayerIndex) >= MAX_CARDS_IN_PLAY) {
-            forceDiscardForWeapon(targetPlayerIndex, card, playerIndex, targetSlotIndex);
+        // Find first empty slot for the target player
+        CardStack targetSlot = null;
+        int actualSlotIndex = -1;
+        List<CardStack> targetSlots = playerSlots.get(targetPlayerIndex);
+        
+        for (int i = 0; i < targetSlots.size(); i++) {
+            if (targetSlots.get(i).getChildren().isEmpty()) {
+                targetSlot = targetSlots.get(i);
+                actualSlotIndex = i;
+                break;
+            }
+        }
+        
+        // Check if all slots are full
+        if (targetSlot == null) {
+            // Force discard to make room
+            forceDiscardForWeapon(targetPlayerIndex, card, playerIndex, 0);
             return true;
         }
 
@@ -827,7 +839,8 @@ public class FullGameController {
         }
 
         System.out.println("Player " + (playerIndex + 1) + " weaponed Player " +
-                (targetPlayerIndex + 1) + " with " + def.getDisplayName());
+                (targetPlayerIndex + 1) + " with " + def.getDisplayName() + 
+                " in slot " + (actualSlotIndex + 1));
 
         if (playerIndex == currentPlayer) {
             hasPlayedThisTurn = true;
@@ -882,6 +895,7 @@ public class FullGameController {
         }
 
         discardPile.addCard(card);
+        updateGameStatistics();
         roundManager.removeCardFromPlay(playerIndex, playedCard);
 
         cardToPlayedCard.remove(card);
@@ -898,18 +912,9 @@ public class FullGameController {
         System.out.println("Player " + (playerIndex + 1) + " discarded played card: " +
                 playedCard.getDefinition().getDisplayName() +
                 " (final hours: " + finalHours + ")");
-
-        if (playerIndex == currentPlayer) {
-            hasPlayedThisTurn = true;
-            updateTurnIndicator();
-
-            // Only auto-advance for human player (player 0)
-            if (playerIndex == 0 && hasDrawnThisTurn && hasPlayedThisTurn) {
-                PauseTransition delay = new PauseTransition(Duration.millis(500));
-                delay.setOnFinished(e -> advanceTurn());
-                delay.play();
-            }
-        }
+        
+        // Note: Discarding played cards does NOT count as playing/ending turn
+        // Players can discard from play area at any time during their turn
     }
 
     // ========== CARD EFFECTS ==========
@@ -1384,20 +1389,28 @@ public class FullGameController {
         card.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
                 if (cardToPlayedCard.containsKey(card)) {
-                    discardPlayedCard(card, currentPlayer);
+                    // Can discard played cards anytime during player's turn
+                    if (currentPlayer == 0) {
+                        discardPlayedCard(card, 0);
+                    }
                 }
             }
         });
     }
 
     private void startDrag(MouseEvent event) {
-        if (currentPlayer != 0) return;
+        if (currentPlayer != 0) {
+            event.consume();
+            return;
+        }
         if (!hasDrawnThisTurn) {
             showMessage("Draw a card first!");
+            event.consume();
             return;
         }
         if (hasPlayedThisTurn) {
             showMessage("Already played this turn!");
+            event.consume();
             return;
         }
 
@@ -1422,7 +1435,18 @@ public class FullGameController {
     }
 
     private void beginFullDrag(MouseEvent event) {
-        if (draggedCards.isEmpty()) return;
+        if (draggedCards.isEmpty()) {
+            event.consume();
+            return;
+        }
+        
+        // Double-check turn conditions
+        if (currentPlayer != 0 || !hasDrawnThisTurn || hasPlayedThisTurn) {
+            draggedCards.clear();
+            sourceStack = null;
+            event.consume();
+            return;
+        }
 
         dragOverlay.toFront();
         dragOverlay.getChildren().setAll(draggedCards);
