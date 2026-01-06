@@ -285,9 +285,23 @@ public class RoundManager {
     /**
      * Report of what happened during a round.
      */
+    public static class ExpiredCardInfo {
+        private final int playerIndex;
+        private final PlayedCard card;
+        
+        public ExpiredCardInfo(int playerIndex, PlayedCard card) {
+            this.playerIndex = playerIndex;
+            this.card = card;
+        }
+        
+        public int getPlayerIndex() { return playerIndex; }
+        public PlayedCard getCard() { return card; }
+    }
+    
     public static class RoundReport {
         private final int roundNumber;
         private Map<Integer, List<String>> playerEvents = new HashMap<>();
+        private List<ExpiredCardInfo> expiredCards = new ArrayList<>();
         
         public RoundReport(int roundNumber) {
             this.roundNumber = roundNumber;
@@ -302,9 +316,11 @@ public class RoundManager {
         public void recordExpiration(int playerIndex, PlayedCard card) {
             playerEvents.computeIfAbsent(playerIndex, k -> new ArrayList<>())
                        .add(card.getDefinition().getDisplayName() + " EXPIRED");
+            expiredCards.add(new ExpiredCardInfo(playerIndex, card));
         }
         
         public int getRoundNumber() { return roundNumber; }
         public Map<Integer, List<String>> getPlayerEvents() { return playerEvents; }
+        public List<ExpiredCardInfo> getExpiredCards() { return expiredCards; }
     }
 }

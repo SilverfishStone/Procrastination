@@ -590,7 +590,7 @@ public class FullGameController {
                 }
             }
 
-            // Handle hour changes
+            // Handle hour changes from round processing
             RoundManager.PlayerState state = roundManager.getPlayerState(p);
             if (state != null) {
                 int hoursGained = state.getTotalHours();
@@ -600,6 +600,11 @@ public class FullGameController {
                 }
             }
         }
+        
+        // Handle expired cards - remove visuals and clean up
+        // Note: The RoundManager already handled the hour adjustments during advanceRound()
+        // We just need to remove the visual cards from the UI
+        handleExpiredCardVisuals(report);
 
         updateHourDisplay();
     }
@@ -608,6 +613,47 @@ public class FullGameController {
      * Handle game ending due to round limit (stalemate).
      * Winner is player with most hours.
      */
+    /**
+     * Handle expired cards from the round report.
+     * Remove visual cards and clean up tracking maps.
+     * Hour adjustments were already applied by RoundManager during advanceRound().
+     */
+    private void handleExpiredCardVisuals(RoundManager.RoundReport report) {
+        List<RoundManager.ExpiredCardInfo> expirations = report.getExpiredCards();
+        
+        for (RoundManager.ExpiredCardInfo info : expirations) {
+            PlayedCard playedCard = info.getCard();
+            GameCard visualCard = playedCardToCard.get(playedCard);
+            
+            if (visualCard != null) {
+                // Remove from play slot
+                int playerIndex = info.getPlayerIndex();
+                for (CardStack slot : playerSlots.get(playerIndex)) {
+                    if (slot.getChildren().contains(visualCard)) {
+                        slot.removeCard(visualCard);
+                        break;
+                    }
+                }
+                
+                // Move to discard pile
+                discardPile.addCard(visualCard);
+                updateGameStatistics();
+                
+                // Clean up tracking
+                cardToPlayedCard.remove(visualCard);
+                playedCardToCard.remove(playedCard);
+                
+                // Handle rolling weapons
+                if (playedCard.getDefinition().isRollingWeapon()) {
+                    int nextPlayer = (playerIndex + 1) % numPlayers;
+                    System.out.println("Rolling weapon passes to Player " + (nextPlayer + 1));
+                    GameCard newWeapon = createSpecificCard(playedCard.getDefinition());
+                    playWeaponOnOpponent(newWeapon, playerIndex, nextPlayer, 0);
+                }
+            }
+        }
+    }
+    
     private void handleStalemate() {
         int maxHours = Integer.MIN_VALUE;
         int winningPlayer = -1;
@@ -1382,6 +1428,73 @@ public class FullGameController {
 
     // ========== DRAG & DROP ==========
 
+    /**
+     * Handle right-click on played cards:
+     * - If player hasn't played this turn: Play the card (apply base discard value, counts as turn)
+     * - If player has already played: Discard the card (apply base discard value, does NOT count as turn)
+     */
+    private void handlePlayedCardClick(GameCard card) {
+        if (currentPlayer != 0) return;
+        if (!hasDrawnThisTurn) {
+            showMessage("Draw a card first!");
+            return;
+        }
+        
+        PlayedCard playedCard = cardToPlayedCard.get(card);
+        if (playedCard == null) return;
+        
+        if (!hasPlayedThisTurn) {
+            // Play from played area - this counts as a turn action
+            playFromPlayedArea(card, playedCard);
+        } else {
+            // Already played this turn, so just discard
+            discardPlayedCard(card, 0);
+        }
+    }
+    
+    /**
+     * Play a card from the played cards area.
+     * This applies the card's base discard value and counts as the player's turn action.
+     */
+    private void playFromPlayedArea(GameCard card, PlayedCard playedCard) {
+        // Get base discard value (non-negative portion of current hours)
+        int baseValue = Math.max(0, playedCard.getCurrentHourValue());
+        
+        // Apply the hours
+        adjustPlayerHours(0, baseValue);
+        
+        // Remove from play
+        for (CardStack slot : playerSlots.get(0)) {
+            if (slot.getChildren().contains(card)) {
+                slot.removeCard(card);
+                break;
+            }
+        }
+        
+        // Discard the card
+        discardPile.addCard(card);
+        updateGameStatistics();
+        roundManager.removeCardFromPlay(0, playedCard);
+        
+        cardToPlayedCard.remove(card);
+        playedCardToCard.remove(playedCard);
+        
+        System.out.println("Player 1 played from played area: " +
+                playedCard.getDefinition().getDisplayName() +
+                " (gained " + baseValue + " hours)");
+        
+        // Mark turn as played
+        hasPlayedThisTurn = true;
+        updateTurnIndicator();
+        
+        // Auto-advance turn
+        if (hasDrawnThisTurn && hasPlayedThisTurn) {
+            PauseTransition delay = new PauseTransition(Duration.millis(500));
+            delay.setOnFinished(e -> advanceTurn());
+            delay.play();
+        }
+    }
+
     private void setupCardHandlers(GameCard card) {
         card.setOnMousePressed(this::startDrag);
         card.setOnDragDetected(this::beginFullDrag);
@@ -1389,9 +1502,9 @@ public class FullGameController {
         card.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
                 if (cardToPlayedCard.containsKey(card)) {
-                    // Can discard played cards anytime during player's turn
+                    // Can play or discard played cards during player's turn
                     if (currentPlayer == 0) {
-                        discardPlayedCard(card, 0);
+                        handlePlayedCardClick(card);
                     }
                 }
             }
