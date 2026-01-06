@@ -1,4 +1,4 @@
-package net.silverfishstone.procrastination.game;
+package net.silverfishstone.procrastination.components;
 
 /**
  * Defines all card types, their effects, and behaviors in the game.
