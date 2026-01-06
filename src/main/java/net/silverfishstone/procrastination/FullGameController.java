@@ -959,8 +959,8 @@ public class FullGameController {
                 playedCard.getDefinition().getDisplayName() +
                 " (final hours: " + finalHours + ")");
         
-        // Note: Discarding played cards does NOT count as playing/ending turn
-        // Players can discard from play area at any time during their turn
+        // Note: This method is used for weapon effects (forced discard) and card expiration.
+        // It does NOT set hasPlayedThisTurn - that's handled by discardFromPlayedArea() for manual discard.
     }
 
     // ========== CARD EFFECTS ==========
@@ -1430,8 +1430,8 @@ public class FullGameController {
 
     /**
      * Handle right-click on played cards:
-     * - If player hasn't played this turn: Play the card (apply base discard value, counts as turn)
-     * - If player has already played: Discard the card (apply base discard value, does NOT count as turn)
+     * Discarding a played card gives you its current hour value (positive or negative)
+     * and counts as your turn action (same as playing from hand).
      */
     private void handlePlayedCardClick(GameCard card) {
         if (currentPlayer != 0) return;
@@ -1440,28 +1440,28 @@ public class FullGameController {
             return;
         }
         
+        if (hasPlayedThisTurn) {
+            showMessage("You've already played this turn!");
+            return;
+        }
+        
         PlayedCard playedCard = cardToPlayedCard.get(card);
         if (playedCard == null) return;
         
-        if (!hasPlayedThisTurn) {
-            // Play from played area - this counts as a turn action
-            playFromPlayedArea(card, playedCard);
-        } else {
-            // Already played this turn, so just discard
-            discardPlayedCard(card, 0);
-        }
+        // Discard from played area - this counts as your turn action
+        discardFromPlayedArea(card, playedCard);
     }
     
     /**
-     * Play a card from the played cards area.
-     * This applies the card's base discard value and counts as the player's turn action.
+     * Discard a card from the played cards area.
+     * This applies the card's CURRENT hour value (can be negative) and counts as the player's turn action.
      */
-    private void playFromPlayedArea(GameCard card, PlayedCard playedCard) {
-        // Get base discard value (non-negative portion of current hours)
-        int baseValue = Math.max(0, playedCard.getCurrentHourValue());
+    private void discardFromPlayedArea(GameCard card, PlayedCard playedCard) {
+        // Get CURRENT hour value (can be positive or negative)
+        int currentValue = playedCard.getCurrentHourValue();
         
-        // Apply the hours
-        adjustPlayerHours(0, baseValue);
+        // Apply the hours (positive or negative)
+        adjustPlayerHours(0, currentValue);
         
         // Remove from play
         for (CardStack slot : playerSlots.get(0)) {
@@ -1479,9 +1479,9 @@ public class FullGameController {
         cardToPlayedCard.remove(card);
         playedCardToCard.remove(playedCard);
         
-        System.out.println("Player 1 played from played area: " +
+        System.out.println("Player 1 discarded from played area: " +
                 playedCard.getDefinition().getDisplayName() +
-                " (gained " + baseValue + " hours)");
+                " (gained " + currentValue + " hours)");
         
         // Mark turn as played
         hasPlayedThisTurn = true;

@@ -92,16 +92,20 @@ public class RoundManager {
                     report.recordExpiration(state.getPlayerIndex(), playedCard);
                     
                     int finalHours = playedCard.getFinalHourValue();
+                    state.addHours(finalHours); // Apply base value (can be positive or negative)
+                    
                     if (finalHours < 0) {
-                        state.addHours(finalHours); // Lose hours
                         System.out.println("Player " + (state.getPlayerIndex() + 1) + 
                                          " loses " + Math.abs(finalHours) + " hours from expired " + 
-                                         playedCard.getDefinition().getDisplayName());
-                    } else {
-                        state.addHours(finalHours); // Keep positive hours
+                                         playedCard.getDefinition().getDisplayName() + " (base value)");
+                    } else if (finalHours > 0) {
                         System.out.println("Player " + (state.getPlayerIndex() + 1) + 
-                                         " keeps " + finalHours + " hours from expired " + 
-                                         playedCard.getDefinition().getDisplayName());
+                                         " gains " + finalHours + " hours from expired " + 
+                                         playedCard.getDefinition().getDisplayName() + " (base value)");
+                    } else {
+                        System.out.println("Player " + (state.getPlayerIndex() + 1) + 
+                                         " gains 0 hours from expired " + 
+                                         playedCard.getDefinition().getDisplayName() + " (base value)");
                     }
                 }
             }

@@ -88,14 +88,16 @@ public class PlayedCard {
 
     /**
      * Gets the final hour value when card is discarded or expires.
-     * Positive values are kept, negative values are lost.
+     * If manually discarded: returns current accumulated hour value (can be positive or negative).
+     * If expired automatically: returns base value (immediateHours from definition).
      */
     public int getFinalHourValue() {
-        if (shouldAutoDiscard() && currentHourValue < 0) {
-            // Expired with negative value - lose all hours
-            return currentHourValue; // Return negative to subtract from total
+        if (hasExpired) {
+            // Card expired - revert to base value (immediateHours)
+            return definition.getImmediateHours();
         }
-        return Math.max(0, currentHourValue); // Keep positive hours, lose negatives
+        // Manually discarded - get current accumulated value
+        return currentHourValue;
     }
 
     /**
