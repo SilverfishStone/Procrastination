@@ -46,6 +46,10 @@ public class FullGameController {
     @FXML private Pane cardLayer;
     @FXML private Text roundText;
     @FXML private Text phaseText;
+    
+    // Game statistics display
+    private Text deckCountText;
+    private Text discardCountText;
 
     private final Image cardBack = new Image(getClass().getResourceAsStream("/net/silverfishstone/procrastination/textures/card_back.png"));
     private final Image hourCardImage = new Image(getClass().getResourceAsStream("/net/silverfishstone/procrastination/textures/card_back.png"));
@@ -68,6 +72,8 @@ public class FullGameController {
     private CardStack actionDeck;
     private CardStack hourDeck;
     private CardStack discardPile;
+    private List<GameCard> actionDeckCards = new ArrayList<>(); // Fixed deck of cards
+    private DeckBuilder deckBuilder;
 
     // Player areas
     private List<CardStack> playerHands = new ArrayList<>();
@@ -109,6 +115,11 @@ public class FullGameController {
         }
 
         roundManager = new RoundManager(numPlayers);
+        
+        // Initialize deck builder
+        deckBuilder = new DeckBuilder(cardBack);
+        actionDeckCards = deckBuilder.createDeck();
+        System.out.println("Created fixed deck with " + actionDeckCards.size() + " cards");
 
         // Initialize game settings
         startingHours = DEFAULT_STARTING_HOURS;
@@ -285,7 +296,7 @@ public class FullGameController {
 
             // Deal starting cards
             for (int i = 0; i < STARTING_ACTION_CARDS; i++) {
-                GameCard actionCard = createRandomActionCard();
+                GameCard actionCard = drawFromDeck();
                 hand.addCard(actionCard);
                 if (p == 0) {
                     setupCardHandlers(actionCard);
@@ -336,6 +347,22 @@ public class FullGameController {
         phaseText.setLayoutX(PLAYAREA_WIDTH / 2 - 50);
         phaseText.setLayoutY(50);
         playArea.getChildren().add(phaseText);
+        
+        // Deck count display (left side)
+        deckCountText = new Text("Deck: 80");
+        deckCountText.setFill(Color.LIGHTBLUE);
+        deckCountText.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
+        deckCountText.setLayoutX(40);
+        deckCountText.setLayoutY(30);
+        playArea.getChildren().add(deckCountText);
+        
+        // Discard count display (right side)
+        discardCountText = new Text("Discard: 0");
+        discardCountText.setFill(Color.ORANGE);
+        discardCountText.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
+        discardCountText.setLayoutX(PLAYAREA_WIDTH - 150);
+        discardCountText.setLayoutY(30);
+        playArea.getChildren().add(discardCountText);
     }
 
     private void addPlaceholder(double x, double y, boolean canHighlight, int rotation) {
@@ -362,55 +389,21 @@ public class FullGameController {
 
     // ========== CARD CREATION ==========
 
-    private GameCard createRandomActionCard() {
-        double rand = random.nextDouble();
-
-        CardDefinition def;
-        if (rand < 0.4) {
-            // 40% play cards
-            CardDefinition[] plays = {
-                    CardDefinition.ON_THE_CLOCK,
-                    CardDefinition.PROFESSIONAL,
-                    CardDefinition.RISKY,
-                    CardDefinition.SHARING_IS_CARING,
-                    CardDefinition.UNPREDICTABLE
-            };
-            def = plays[random.nextInt(plays.length)];
-        } else if (rand < 0.7) {
-            // 30% weapons
-            CardDefinition[] weapons = {
-                    CardDefinition.TARDY,
-                    CardDefinition.DEADLINE,
-                    CardDefinition.STOCK_MARKET,
-                    CardDefinition.SCAMMER,
-                    CardDefinition.QUIT,
-                    CardDefinition.PARASITE,
-                    CardDefinition.DOWNSIZING,
-                    CardDefinition.FOREIGN_EXCHANGE
-            };
-            def = weapons[random.nextInt(weapons.length)];
-        } else if (rand < 0.9) {
-            // 20% helpers
-            CardDefinition[] helpers = {
-                    CardDefinition.EXCUSED,
-                    CardDefinition.EXTENSION,
-                    CardDefinition.NEPOTISM,
-                    CardDefinition.NEWBIE
-            };
-            def = helpers[random.nextInt(helpers.length)];
-        } else {
-            // 10% alerts
-            CardDefinition[] alerts = {
-                    CardDefinition.AMNESIA,
-                    CardDefinition.FIRED,
-                    CardDefinition.PERFORMANCE_REVIEW,
-                    CardDefinition.RECESSION
-            };
-            def = alerts[random.nextInt(alerts.length)];
+    /**
+     * Draw a card from the fixed deck. Reshuffles discard pile if needed.
+     * @return The next card from the deck, or null if no cards available
+     */
+    private GameCard drawFromDeck() {
+        if (actionDeckCards.isEmpty()) {
+            reshuffleDiscardPile();
+            
+            if (actionDeckCards.isEmpty()) {
+                System.out.println("ERROR: No cards left in deck or discard pile!");
+                return null;
+            }
         }
-
-        GameCard card = new GameCard(def, cardBack);
-        card.flip();
+        
+        GameCard card = actionDeckCards.remove(0);
         return card;
     }
 
@@ -420,11 +413,67 @@ public class FullGameController {
     }
 
     private void replenishActionDeck() {
+        // Draw from fixed deck, reshuffle discard pile if needed
         while (actionDeck.getChildren().size() < 10) {
-            GameCard back = createRandomActionCard();
-            back.flip(); // Face down
-            actionDeck.addCard(back);
+            if (actionDeckCards.isEmpty()) {
+                // Reshuffle discard pile back into deck
+                reshuffleDiscardPile();
+                
+                if (actionDeckCards.isEmpty()) {
+                    // Still empty after reshuffle - no more cards available
+                    System.out.println("Warning: No more action cards available!");
+                    break;
+                }
+            }
+            
+            // Draw next card from deck
+            GameCard card = actionDeckCards.remove(0);
+            card.flip(); // Ensure face down
+            actionDeck.addCard(card);
         }
+        System.out.println("Action deck replenished. Cards in deck: " + actionDeckCards.size() + 
+                         ", in discard: " + discardPile.getChildren().size());
+        updateGameStatistics();
+    }
+    
+    /**
+     * Update displayed game statistics (deck count, discard count).
+     */
+    private void updateGameStatistics() {
+        int deckSize = actionDeckCards.size();
+        int discardSize = discardPile.getCardCount();
+        
+        deckCountText.setText("Deck: " + deckSize);
+        discardCountText.setText("Discard: " + discardSize);
+        
+        // Color code deck count to warn when running low
+        if (deckSize <= 5 && discardSize <= 5) {
+            deckCountText.setFill(Color.RED); // Critical - very few cards
+        } else if (deckSize <= 10) {
+            deckCountText.setFill(Color.ORANGE); // Low cards
+        } else {
+            deckCountText.setFill(Color.LIGHTBLUE); // Normal
+        }
+    }
+    
+    private void reshuffleDiscardPile() {
+        System.out.println("Reshuffling discard pile (" + discardPile.getChildren().size() + " cards) back into deck");
+        
+        // Move all cards from discard pile back to deck
+        List<GameCard> cardsToReshuffle = new ArrayList<>();
+        while (!discardPile.getChildren().isEmpty()) {
+            GameCard card = (GameCard) discardPile.getChildren().remove(0);
+            card.flip(); // Face down
+            cardsToReshuffle.add(card);
+        }
+        
+        // Shuffle the cards
+        Collections.shuffle(cardsToReshuffle);
+        
+        // Add back to deck
+        actionDeckCards.addAll(cardsToReshuffle);
+        
+        System.out.println("Reshuffled " + cardsToReshuffle.size() + " cards back into deck");
     }
 
     private void replenishHourDeck() {
@@ -452,7 +501,18 @@ public class FullGameController {
             }
         }
 
-        roundText.setText("Round: " + roundManager.getCurrentRound());
+        int currentRound = roundManager.getCurrentRound();
+        int maxRounds = roundManager.getMaxRounds();
+        roundText.setText("Round: " + currentRound + " / " + maxRounds);
+        
+        // Update color based on proximity to end
+        if (currentRound >= maxRounds - 3) {
+            roundText.setFill(Color.RED); // Nearing end
+        } else if (currentRound >= maxRounds - 5) {
+            roundText.setFill(Color.ORANGE); // Getting close
+        } else {
+            roundText.setFill(Color.WHITE); // Normal
+        }
 
         if (!hasDrawnThisTurn) {
             phaseText.setText("Draw Phase - Click deck");
@@ -499,6 +559,13 @@ public class FullGameController {
 
     private void advanceRound() {
         RoundManager.RoundReport report = roundManager.advanceRound();
+        
+        // Check for round limit (stalemate)
+        if (roundManager.hasReachedRoundLimit()) {
+            System.out.println("\n=== ROUND LIMIT REACHED ===\n");
+            handleStalemate();
+            return;
+        }
 
         // Update all visual cards in play
         for (int p = 0; p < numPlayers; p++) {
@@ -528,6 +595,37 @@ public class FullGameController {
         }
 
         updateHourDisplay();
+    }
+    
+    /**
+     * Handle game ending due to round limit (stalemate).
+     * Winner is player with most hours.
+     */
+    private void handleStalemate() {
+        int maxHours = Integer.MIN_VALUE;
+        int winningPlayer = -1;
+        
+        for (int p = 0; p < numPlayers; p++) {
+            int hours = playerHourCounts.get(p);
+            if (hours > maxHours) {
+                maxHours = hours;
+                winningPlayer = p;
+            }
+        }
+        
+        gameOver = true;
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("STALEMATE! Game reached round limit (" + roundManager.getMaxRounds() + ")\n\n");
+        sb.append("Final Scores:\n");
+        for (int p = 0; p < numPlayers; p++) {
+            String prefix = (p == winningPlayer) ? "👑 " : "   ";
+            sb.append(prefix + "Player " + (p + 1) + ": " + playerHourCounts.get(p) + " hours\n");
+        }
+        sb.append("\nPlayer " + (winningPlayer + 1) + " wins with " + maxHours + " hours!");
+        
+        showMessage(sb.toString());
+        System.out.println("\n" + sb.toString());
     }
 
     private void skipTurn() {
@@ -560,7 +658,12 @@ public class FullGameController {
         if (gameOver) return; // Don't draw if game is over
 
         CardStack targetHand = playerHands.get(playerIndex);
-        GameCard newCard = createRandomActionCard();
+        GameCard newCard = drawFromDeck();
+        
+        if (newCard == null) {
+            System.out.println("Cannot draw - no cards available!");
+            return;
+        }
 
         // Check for alert card
         if (newCard.getDefinition().isAlertCard()) {
@@ -658,6 +761,7 @@ public class FullGameController {
         if (!def.isPlayWeapon()) {
             hand.removeCard(card);
             discardPile.addCard(card);
+            updateGameStatistics();
 
             executeImmediateWeaponEffect(def, playerIndex, targetPlayerIndex, targetSlotIndex);
 
@@ -911,13 +1015,16 @@ public class FullGameController {
                 for (GameCard card : handCards) {
                     hand.removeCard(card);
                     discardPile.addCard(card);
+                    updateGameStatistics();
                 }
 
                 for (int i = 0; i < STARTING_ACTION_CARDS; i++) {
-                    GameCard newCard = createRandomActionCard();
-                    hand.addCard(newCard);
-                    if (playerIndex == 0) {
-                        setupCardHandlers(newCard);
+                    GameCard newCard = drawFromDeck();
+                    if (newCard != null) {
+                        hand.addCard(newCard);
+                        if (playerIndex == 0) {
+                            setupCardHandlers(newCard);
+                        }
                     }
                 }
 
@@ -965,10 +1072,12 @@ public class FullGameController {
 
                 // Draw new cards
                 for (int i = 0; i < STARTING_ACTION_CARDS; i++) {
-                    GameCard newCard = createRandomActionCard();
-                    hand.addCard(newCard);
-                    if (playerIndex == 0) {
-                        setupCardHandlers(newCard);
+                    GameCard newCard = drawFromDeck();
+                    if (newCard != null) {
+                        hand.addCard(newCard);
+                        if (playerIndex == 0) {
+                            setupCardHandlers(newCard);
+                        }
                     }
                 }
 

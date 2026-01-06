@@ -16,6 +16,7 @@ import java.util.*;
 public class RoundManager {
     
     private int currentRound = 0;
+    private int maxRounds = 25; // Default max rounds before stalemate
     private List<PlayerState> playerStates;
     
     public RoundManager(int numPlayers) {
@@ -232,6 +233,17 @@ public class RoundManager {
     }
     
     public int getCurrentRound() { return currentRound; }
+    
+    public int getMaxRounds() { return maxRounds; }
+    
+    public void setMaxRounds(int maxRounds) { this.maxRounds = maxRounds; }
+    
+    /**
+     * Checks if the game has reached the maximum round limit (stalemate).
+     */
+    public boolean hasReachedRoundLimit() {
+        return currentRound >= maxRounds;
+    }
     
     public PlayerState getPlayerState(int index) {
         if (index >= 0 && index < playerStates.size()) {
