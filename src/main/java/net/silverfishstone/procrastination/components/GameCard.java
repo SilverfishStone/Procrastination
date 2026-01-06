@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
-import net.silverfishstone.procrastination.game.CardDefinition;
+import net.silverfishstone.procrastination.components.CardDefinition;
 
 import java.util.ArrayList;
 import java.util.List;

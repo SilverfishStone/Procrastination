@@ -19,7 +19,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 import net.silverfishstone.procrastination.components.PlayedCard;
-import net.silverfishstone.procrastination.game.CardDefinition;
+import net.silverfishstone.procrastination.components.CardDefinition;
 import net.silverfishstone.procrastination.game.ComputerAI;
 import net.silverfishstone.procrastination.game.RoundManager;
 
