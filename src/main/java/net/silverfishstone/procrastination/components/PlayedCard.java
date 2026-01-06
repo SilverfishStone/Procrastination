@@ -1,15 +1,12 @@
 package net.silverfishstone.procrastination.components;
 
-import net.silverfishstone.procrastination.components.GameCard;
-import net.silverfishstone.procrastination.game.CardDefinition;
-
 /**
  * Represents a card that is currently in play in front of a player.
  * Tracks rounds, hours accumulated, and special states.
  */
 public class PlayedCard {
     private final GameCard visualCard;        // The JavaFX GameCard component
-    private final net.silverfishstone.procrastination.game.CardDefinition definition;  // What type of card this is
+    private final CardDefinition definition;  // What type of card this is
     private final int ownerPlayerIndex;       // Who played this card
 
     private int roundsInPlay = 0;             // How many rounds this has been active
