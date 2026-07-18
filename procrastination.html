@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clocked In — the billable hours card game</title>
+<style>
+  :root{
+    --desk:#252a33; --panel:#2d3440; --panel2:#343c4a; --line:#3f4959;
+    --manila:#f2e8d0; --manila-dk:#e6d8b6; --ink:#2a2318; --ink-soft:#5c5240;
+    --stamp:#c8402f; --brass:#d9a83f; --brass-dk:#a87c22;
+    --blue:#4a7396; --green:#4d8a5f; --hazard:#e3b93a;
+    --text:#dfe4ec; --text-dim:#9aa5b5;
+    --mono:"Courier New", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --body:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--desk);
+    background-image:radial-gradient(ellipse at 50% -10%, #2f3644 0%, var(--desk) 60%);
+    color:var(--text); font-family:var(--body); font-size:14px; line-height:1.45;
+  }
+  button{font-family:inherit; cursor:pointer;}
+  button:focus-visible, [tabindex]:focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
+
+  /* ---------- header ---------- */
+  header{
+    display:flex; align-items:center; gap:22px; flex-wrap:wrap;
+    padding:12px 20px; border-bottom:1px solid var(--line);
+    background:linear-gradient(#2a303b,#262b35);
+  }
+  .brand{display:flex; flex-direction:column;}
+  .brand h1{
+    font-family:var(--mono); font-size:22px; letter-spacing:5px; font-weight:700;
+    color:var(--manila);
+  }
+  .brand small{color:var(--text-dim); font-size:11px; letter-spacing:1px; text-transform:uppercase;}
+  .round-stamp{
+    font-family:var(--mono); font-weight:700; letter-spacing:2px; font-size:16px;
+    color:var(--stamp); border:2.5px solid var(--stamp); border-radius:4px;
+    padding:6px 14px; transform:rotate(-2deg); background:rgba(200,64,47,.06);
+    box-shadow:0 0 0 1px rgba(200,64,47,.25) inset; white-space:nowrap;
+  }
+  .turn-ind{
+    font-family:var(--mono); font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--text-dim); flex:1; min-width:180px;
+  }
+  .turn-ind b{color:var(--brass);}
+  .hdr-piles{display:flex; gap:12px; align-items:center;}
+  .pile{
+    width:74px; height:56px; border-radius:6px; border:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:10px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--text-dim); text-align:center; padding:4px;
+  }
+  .pile.draw{background:repeating-linear-gradient(45deg,#3a4152 0 6px,#333a49 6px 12px);}
+  .pile.draw b{font-size:16px; color:var(--manila);}
+  .pile.discard{background:#2a2f3a;}
+  .pile.discard b{color:var(--manila); font-size:10.5px; line-height:1.2;}
+
+  /* ---------- layout ---------- */
+  .layout{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:16px; padding:16px 20px; max-width:1440px; margin:0 auto;}
+  @media (max-width:980px){ .layout{grid-template-columns:1fr;} }
+  .main{display:flex; flex-direction:column; gap:14px; min-width:0;}
+  .side{display:flex; flex-direction:column; gap:14px; min-width:0;}
+
+  .zone{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px;}
+  .zone-title{
+    font-family:var(--mono); font-size:11px; letter-spacing:2.5px; text-transform:uppercase;
+    color:var(--text-dim); margin-bottom:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .zone-title .hours-badge{
+    font-size:13px; color:var(--brass); border:1px solid var(--brass-dk);
+    border-radius:20px; padding:1px 10px; background:rgba(217,168,63,.08); letter-spacing:1px;
+  }
+  .zone-title .hours-badge.neg{color:#e77; border-color:#a44;}
+  .zone-title .meta{color:var(--text-dim); font-size:10.5px; letter-spacing:1px;}
+  .zone.active-turn{border-color:var(--brass-dk); box-shadow:0 0 0 1px rgba(217,168,63,.35), 0 4px 14px rgba(0,0,0,.25);}
+
+  .opp-row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:760px){ .opp-row{grid-template-columns:1fr;} }
+
+  .desk-slots{display:flex; gap:10px; flex-wrap:wrap; min-height:150px;}
+  .slot-empty{
+    width:126px; min-height:148px; border:1.5px dashed #4a5466; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; color:#556074;
+    font-family:var(--mono); font-size:10px; letter-spacing:2px;
+  }
+
+  /* ---------- cards ---------- */
+  .card{
+    width:126px; min-height:148px; background:linear-gradient(170deg,var(--manila),var(--manila-dk));
+    border-radius:8px; color:var(--ink); display:flex; flex-direction:column;
+    box-shadow:0 2px 5px rgba(0,0,0,.4); position:relative; overflow:hidden;
+    border:1px solid #b8a87e; text-align:left; font-family:var(--body); flex-shrink:0;
+  }
+  .card.sm{width:112px; min-height:132px;}
+  .card .band{
+    font-family:var(--mono); font-weight:700; font-size:9px; letter-spacing:2px;
+    text-transform:uppercase; color:#fff; padding:3px 7px;
+  }
+  .band.play{background:var(--blue);} .band.weapon{background:var(--stamp);}
+  .band.helper{background:var(--green);}
+  .band.alert{background:repeating-linear-gradient(45deg,#1c1c1c 0 8px,var(--hazard) 8px 16px); color:#111; text-shadow:0 0 3px #fff;}
+  .card .cname{font-weight:700; font-size:12.5px; padding:6px 7px 2px; line-height:1.15;}
+  .card .ctext{font-size:10px; color:var(--ink-soft); padding:0 7px; line-height:1.3; flex:1;}
+  .card .cfoot{
+    display:flex; align-items:center; justify-content:space-between; gap:4px;
+    padding:5px 7px 6px; font-family:var(--mono); font-size:10px; font-weight:700;
+  }
+  .agebar{height:4px; background:#cdbd97; border-radius:2px; overflow:hidden; margin:0 7px 4px;}
+  .agebar i{display:block; height:100%; background:var(--stamp); transition:width .3s;}
+  .chips{display:flex; align-items:center; height:20px;}
+  .chip{
+    width:18px; height:18px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f0cd7c, var(--brass) 55%, var(--brass-dk));
+    border:1px solid var(--brass-dk); margin-left:-9px; box-shadow:0 1px 2px rgba(0,0,0,.35);
+  }
+  .chip:first-child{margin-left:0;}
+  .chip.neg{background:radial-gradient(circle at 35% 30%, #e88, var(--stamp) 55%, #7c241a); border-color:#7c241a;}
+  .chip-count{font-family:var(--mono); font-weight:700; font-size:11px; margin-left:4px;}
+  .chip-count.neg{color:var(--stamp);}
+  .tags{position:absolute; top:22px; right:4px; display:flex; flex-direction:column; gap:3px; align-items:flex-end;}
+  .tag{
+    font-family:var(--mono); font-size:8px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+    background:var(--ink); color:var(--manila); border-radius:3px; padding:1px 5px;
+  }
+  .tag.nepo{background:var(--green); color:#fff;}
+  .tag.stamp{background:var(--stamp); color:#fff;}
+  .card.clickable{cursor:pointer; transition:transform .12s, box-shadow .12s;}
+  .card.clickable:hover{transform:translateY(-4px); box-shadow:0 8px 16px rgba(0,0,0,.5);}
+  .card.just-drawn{box-shadow:0 0 0 2.5px var(--brass), 0 4px 12px rgba(0,0,0,.5);}
+  .card.suppressed .ctext::after{content:" (frozen by a weapon)"; color:var(--stamp); font-weight:700;}
+
+  .hand-row{display:flex; gap:10px; flex-wrap:wrap; min-height:150px;}
+  .hidden-hand{display:flex; gap:4px;}
+  .hidden-card{width:26px; height:38px; border-radius:4px; border:1px solid var(--line);
+    background:repeating-linear-gradient(45deg,#3a4152 0 5px,#333a49 5px 10px);}
+
+  /* ---------- action bar ---------- */
+  .action-bar{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px 16px;
+  }
+  .action-bar .hint{flex:1; min-width:200px; color:var(--text-dim); font-size:13px;}
+  .action-bar .hint b{color:var(--manila);}
+  .btn{
+    font-family:var(--mono); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; font-size:12px;
+    border-radius:6px; padding:10px 18px; border:1px solid var(--brass-dk);
+    background:linear-gradient(#e9bc57,var(--brass)); color:#241a05;
+  }
+  .btn:hover:not(:disabled){filter:brightness(1.08);}
+  .btn.ghost{background:transparent; color:var(--text-dim); border-color:var(--line);}
+  .btn.ghost:hover:not(:disabled){color:var(--text); border-color:var(--text-dim);}
+  .btn:disabled{opacity:.35; cursor:not-allowed;}
+
+  /* ---------- log ---------- */
+  .log{max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; font-size:12px;}
+  .log-entry{padding:6px 8px; border-left:3px solid var(--line); background:rgba(255,255,255,.02); border-radius:0 4px 4px 0; color:var(--text-dim);}
+  .log-entry b{color:var(--text);}
+  .log-entry .rtag{font-family:var(--mono); font-size:9.5px; color:#6b7688; letter-spacing:1px; margin-right:6px;}
+  .log-entry.good{border-left-color:var(--green);}
+  .log-entry.bad{border-left-color:var(--stamp);}
+  .log-entry.alert{border-left-color:var(--hazard);}
+
+  /* ---------- house rules ---------- */
+  details.rules summary{
+    cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:2.5px;
+    text-transform:uppercase; color:var(--text-dim); list-style:none;
+  }
+  details.rules summary::before{content:"▸ ";}
+  details.rules[open] summary::before{content:"▾ ";}
+  details.rules ol{margin:10px 0 0 18px; display:flex; flex-direction:column; gap:7px; font-size:12px; color:var(--text-dim);}
+  details.rules b{color:var(--text);}
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(12,15,20,.72); display:flex;
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal{
+    background:var(--panel2); border:1px solid var(--line); border-radius:12px;
+    max-width:640px; width:100%; max-height:86vh; overflow-y:auto; padding:20px 22px;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+  }
+  .modal h2{font-family:var(--mono); font-size:15px; letter-spacing:2px; text-transform:uppercase; color:var(--manila); margin-bottom:8px;}
+  .modal p{color:var(--text-dim); margin-bottom:14px; font-size:13px;}
+  .modal .choices{display:flex; flex-direction:column; gap:8px;}
+  .choice-btn{
+    text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:10px 14px; color:var(--text); font-size:13px; transition:border-color .12s, background .12s;
+  }
+  .choice-btn:hover{border-color:var(--brass-dk); background:#39424f;}
+  .choice-btn small{display:block; color:var(--text-dim); font-size:11px; margin-top:2px;}
+  .choice-btn.danger{border-color:#6e3a33;}
+  .choice-btn.danger:hover{border-color:var(--stamp);}
+  .modal .card-grid{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+  .modal .card-grid .card{cursor:pointer;}
+  .modal .card-grid .card:hover{transform:translateY(-3px); box-shadow:0 0 0 2px var(--brass);}
+
+  .final-table{width:100%; border-collapse:collapse; margin:10px 0 16px; font-family:var(--mono);}
+  .final-table td, .final-table th{padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; font-size:13px;}
+  .final-table .winner td{color:var(--brass); font-weight:700;}
+  .promo-stamp{
+    display:inline-block; font-family:var(--mono); font-weight:700; letter-spacing:3px; font-size:20px;
+    color:var(--stamp); border:3px solid var(--stamp); border-radius:6px; padding:8px 18px;
+    transform:rotate(-4deg); margin-bottom:12px;
+  }
+  input[type=number]{
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    font-family:var(--mono); font-size:16px; padding:8px 12px; border-radius:6px; width:90px;
+  }
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>CLOCKED&nbsp;IN</h1>
+    <small>a card game about billable hours</small>
+  </div>
+  <div class="round-stamp" id="roundStamp">ROUND —</div>
+  <div class="turn-ind" id="turnInd">Setting up the office…</div>
+  <div class="hdr-piles">
+    <div class="pile draw"><b>∞</b><span>Draw pile</span></div>
+    <div class="pile discard" id="discardPile"><span>Discard</span><b>—</b></div>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="main">
+    <div class="opp-row" id="oppRow"></div>
+
+    <div class="zone" id="myDeskZone">
+      <div class="zone-title">Your desk
+        <span class="hours-badge" id="myHours">0 h</span>
+        <span class="meta" id="myDeskMeta"></span>
+      </div>
+      <div class="desk-slots" id="myDesk"></div>
+    </div>
+
+    <div class="zone">
+      <div class="zone-title">Your hand <span class="meta" id="myHandMeta"></span></div>
+      <div class="hand-row" id="myHand"></div>
+    </div>
+
+    <div class="action-bar">
+      <div class="hint" id="hint">Welcome to the office.</div>
+      <button class="btn ghost" id="skipBtn" disabled>Skip turn</button>
+      <button class="btn" id="drawBtn" disabled>Punch in &amp; draw</button>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="zone">
+      <div class="zone-title">Office log</div>
+      <div class="log" id="log"></div>
+    </div>
+    <div class="zone">
+      <details class="rules">
+        <summary>House rules (rulings made by this app)</summary>
+        <ol>
+          <li><b>A turn</b> is: your cards age one round, then you either <b>skip</b>, or <b>draw and take exactly one action</b> — play one card, use one card, or discard one card (from hand or desk).</li>
+          <li><b>Discarding from hand never triggers a card's effect</b> (per rules Example 1, where discarding a play card earns nothing). Weapons and helpers must be <i>used</i> to take effect; unwanted ones can simply be tossed.</li>
+          <li><b>A drawn Alert</b> resolves immediately and uses up your whole turn. Fired! and Recession immediately discard affected desk cards with normal settlement, so earned hours bank and unrecovered costs remain lost. Alerts are never dealt in opening hands, and never appear in refill/redraw draws — only on your own turn's draw.</li>
+          <li><b>Negative cards</b> (Risky, Stock Market, Downsizing): the full cost is paid the moment the card enters play. One hour returns to you each round until repaid, then the card earns from the pile. Discarding while hours are still owed forfeits them. <b>Expiring</b> loses everything on the card <i>and</i> charges the base cost again.</li>
+          <li><b>Risky</b> jumps to a total of +8 on its 8th round (per its card text), then expires on the 9th.</li>
+          <li><b>Professional</b> pays +10 only when discarded on round 8 or later, up to its (possibly extended) deadline. Expiring pays nothing.</li>
+          <li><b>Tardy</b> ages the target card one round with no earnings — it can force an immediate expiration.</li>
+          <li><b>Parasite</b> moves 1 hour per round from its holder to its attacker, 4 hours total. Discarding it early pays the attacker the remaining balance at once.</li>
+          <li><b>Quit</b>: the attacker picks a visible played card, or "hand" (random card). A card discarded by Quit is <b>voided</b> — hours on it are lost, no costs charged, no effects. A player who lost a hand card refills to 5 free at the start of their next turn.</li>
+          <li><b>Foreign Exchange</b> swaps one random hand card from each side.</li>
+          <li><b>Excused</b> can be used from hand at any time, for free, to cancel a weapon aimed at you (never an Alert). As your action, it can also discard one unprotected weapon already on your desk without triggering that weapon's remaining effect. Against <b>Downsizing</b> it deflects: you are skipped and it moves on. Downsizing dies once every player has suffered or deflected it, and it charges its full cost to each new holder.</li>
+          <li><b>Making room</b>: if a play-weapon lands on a full desk, you discard one of your own cards <i>normally</i> (banking rules apply — this one isn't voided).</li>
+          <li>While a <b>weapon sits on your desk</b>, your unprotected non-weapon cards neither earn nor recover owed hours. They still age and can expire. A card protected by <b>Extension or Nepotism</b> overrides this freeze.</li>
+          <li><b>Performance Review</b>: weapons in your hand are executed (you pick targets); play and helper cards discard with no effect; then you redraw to 5.</li>
+          <li><b>Amnesia</b> rebuilds every card in play as freshly played: earned hours return to the pile, attachments (Extension, Nepotism) are removed, and negative cards re-charge whatever you had recovered.</li>
+          <li><b>Extension</b> adds 5 rounds and blocks weapons from affecting its protected card. <b>Nepotism</b> also blocks weapons and stops normal expiry. Only Alerts bypass helpers.</li>
+          <li><b>Sharing is Caring</b> earns whenever its linked player's cards earn from the pile. It voids (hours lost) the moment any card of yours or theirs expires.</li>
+          <li><b>Hour totals can go negative</b> (tracked as debt, per rules Example 3). Scammer can't steal from a player at 0 or below.</li>
+          <li><b>Game end</b>: after the final round, cards still in play settle as if discarded — earned hours bank, unrecovered costs stay lost. Most hours wins; ties share the win.</li>
+        </ol>
+      </details>
+    </div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+"use strict";
+/* ================= Card definitions ================= */
+const DEFS = {
+  onTheClock:{t:'play',name:'On the Clock',txt:'+1 hour each round. Expires after 5 rounds.',life:5,w:10},
+  professional:{t:'play',name:'Professional',txt:'+10 hours when discarded on round 8. Expires on the 9th.',life:8,w:8},
+  risky:{t:'play',name:'Risky',txt:'−5 now, +1 back per round. Worth +8 on round 8. Expires on the 9th.',life:8,neg:5,w:8},
+  sharing:{t:'play',name:'Sharing is Caring',txt:'+1 hour whenever your chosen player earns. Voids if any of your or their cards expire. Expires after 9 rounds.',life:9,w:7},
+  unpredictable:{t:'play',name:'Unpredictable',txt:'+1, −1, +2, −2… one step per round. Expires after 9 rounds.',life:9,w:9},
+  tardy:{t:'weapon',sub:'imm',name:'Tardy',txt:'Age any card in play by 1 round.',w:6},
+  deadline:{t:'weapon',sub:'imm',name:'Deadline',txt:'Expire one card played by another player.',w:5},
+  stockMarket:{t:'weapon',sub:'play',name:'Stock Market',txt:'−4 now, +1 back per round. Expires after 5 rounds.',life:5,neg:4,w:5},
+  scammer:{t:'weapon',sub:'imm',name:'Scammer',txt:'Steal 1 hour from any player.',w:6},
+  quit:{t:'weapon',sub:'imm',name:'Quit',txt:'Force a player to discard a played card of your choice, or a random hand card.',w:5},
+  parasite:{t:'weapon',sub:'play',name:'Parasite',txt:'Holder pays you 1 hour per round, 4 total. Expires after 5 rounds.',life:5,w:5},
+  foreignExchange:{t:'weapon',sub:'imm',name:'Foreign Exchange',txt:'Swap one random hand card with another player.',w:4},
+  excused:{t:'helper',name:'Excused',txt:'Cancel an incoming weapon for free, or use it to discard an unprotected weapon already on your desk. Never cancels Alerts.',w:6},
+  extension:{t:'helper',name:'Extension',txt:'Delay a card\u2019s expiration by 5 rounds and protect it from weapons. Alerts bypass it.',w:4},
+  nepotism:{t:'helper',name:'Nepotism',txt:'Protect a card from weapons and normal expiry. Alerts bypass it. It stops earning past its deadline.',w:3},
+  newbie:{t:'helper',name:'Newbie',txt:'Dead hand: discard your hand (card costs still apply) and draw 5 new cards.',w:3},
+  amnesia:{t:'alert',name:'Amnesia',txt:'Every card in play resets to freshly played.',w:1},
+  fired:{t:'alert',name:'Fired!',txt:'Immediately discard and settle all cards on your desk.',w:1},
+  performanceReview:{t:'alert',name:'Performance Review',txt:'Discard your whole hand — card costs are charged, nothing else triggers — then redraw 5.',w:1},
+  recession:{t:'alert',name:'Recession',txt:'Immediately discard and settle every card on every player’s desk.',w:1},
+};
+const KEYS = Object.keys(DEFS);
+const TOTAL_W = KEYS.reduce((s,k)=>s+DEFS[k].w,0);
+const NONALERT_W = KEYS.filter(k=>DEFS[k].t!=='alert').reduce((s,k)=>s+DEFS[k].w,0);
+
+/* ================= Utilities ================= */
+var AI_DELAY = 700;
+let _uid = 1;
+const $ = id => document.getElementById(id);
+const rint = n => Math.floor(Math.random()*n);
+const pick = a => a[rint(a.length)];
+function drawKey(allowAlert){
+  let r = Math.random() * (allowAlert ? TOTAL_W : NONALERT_W);
+  for (const k of KEYS){
+    if (!allowAlert && DEFS[k].t==='alert') continue;
+    r -= DEFS[k].w;
+    if (r < 0) return k;
+  }
+  return 'onTheClock';
+}
+function makeCard(key){
+  const d = DEFS[key];
+  return {uid:_uid++, key, age:0, tokens:0, owed:0, ext:0, nepo:false,
+          link:null, attacker:null, transfers:0};
+}
+const lifespan = c => DEFS[c.key].life + c.ext*5;
+
+/* ================= State ================= */
+var state = null;
+function newState(maxRounds){
+  return {
+    maxRounds, round:1, turnIdx:0, over:false,
+    phase:'idle',            // 'turnStart' | 'action' during human turn
+    discard:[],              // {name, t}
+    players:[
+      {id:0, name:'You',    isHuman:true,  hours:10, hand:[], tab:[], refill:false},
+      {id:1, name:'Dana',   isHuman:false, hours:10, hand:[], tab:[], refill:false},
+      {id:2, name:'Marcus', isHuman:false, hours:10, hand:[], tab:[], refill:false},
+    ],
+  };
+}
+const cur = () => state.players[state.turnIdx];
+const byId = id => state.players[id];
+const others = p => state.players.filter(q=>q.id!==p.id);
+
+/* ================= Log ================= */
+function log(msg, cls){
+  const e = document.createElement('div');
+  e.className = 'log-entry' + (cls ? ' '+cls : '');
+  e.innerHTML = '<span class="rtag">R'+String(state.round).padStart(2,'0')+'</span>' + msg;
+  const box = $('log');
+  box.prepend(e);
+  while (box.children.length > 120) box.lastChild.remove();
+}
+const B = s => '<b>'+s+'</b>';
+
+/* ================= Modal (promise-based) ================= */
+function modal(opts){
+  return new Promise(resolve=>{
+    const root = $('modalRoot');
+    const ov = document.createElement('div');
+    ov.className = 'overlay';
+    const m = document.createElement('div');
+    m.className = 'modal';
+    m.innerHTML = '<h2>'+opts.title+'</h2>' + (opts.body ? '<p>'+opts.body+'</p>' : '');
+    const wrap = document.createElement('div');
+    wrap.className = 'choices';
+    for (const ch of opts.choices){
+      const b = document.createElement('button');
+      b.className = 'choice-btn' + (ch.danger ? ' danger' : '');
+      b.innerHTML = ch.label + (ch.sub ? '<small>'+ch.sub+'</small>' : '');
+      b.onclick = () => { root.innerHTML=''; resolve(ch.value); };
+      wrap.appendChild(b);
+    }
+    m.appendChild(wrap);
+    ov.appendChild(m);
+    root.innerHTML = '';
+    root.appendChild(ov);
+    const first = wrap.querySelector('button');
+    if (first) first.focus();
+  });
+}
+function notify(title, body){
+  return modal({title, body, choices:[{label:'OK', value:true}]});
+}
+
+/* ================= Rendering ================= */
+function chipRow(c){
+  if (c.owed > 0){
+    const n = Math.min(c.owed, 5);
+    let h = '<span class="chips">';
+    for (let i=0;i<n;i++) h += '<span class="chip neg"></span>';
+    h += '</span><span class="chip-count neg">−'+c.owed+'h</span>';
+    return h;
+  }
+  if (c.tokens > 0){
+    const n = Math.min(c.tokens, 5);
+    let h = '<span class="chips">';
+    for (let i=0;i<n;i++) h += '<span class="chip"></span>';
+    h += '</span><span class="chip-count">'+c.tokens+'h</span>';
+    return h;
+  }
+  return '<span class="chip-count" style="color:#8a7f63">0h</span>';
+}
+function cardHTMLv(c, opts){
+  opts = opts || {};
+  const d = DEFS[c.key];
+  const L = lifespan(c);
+  const pct = Math.min(100, Math.round(c.age / (L||1) * 100));
+  let tags = '';
+  if (c.nepo) tags += '<span class="tag nepo">Nepotism</span>';
+  if (c.ext)  tags += '<span class="tag">+'+(c.ext*5)+'r ext</span>';
+  if (c.key==='sharing' && c.link!==null) tags += '<span class="tag">→ '+byId(c.link).name+'</span>';
+  if (c.key==='parasite' && c.attacker!==null) tags += '<span class="tag stamp">→ '+byId(c.attacker).name+'</span>';
+  const cls = ['card', opts.sm?'sm':'', opts.click?'clickable':'', opts.drawn?'just-drawn':'', opts.suppressed?'suppressed':''].filter(Boolean).join(' ');
+  const foot = opts.inPlay
+    ? '<div class="agebar"><i style="width:'+pct+'%"></i></div><div class="cfoot"><span>R'+c.age+'/'+L+'</span>'+chipRow(c)+'</div>'
+    : '<div class="cfoot"><span style="color:#8a7f63">'+(d.t==='weapon'?(d.sub==='imm'?'instant':'placed'):d.t)+'</span></div>';
+  return '<div class="'+cls+'" '+(opts.attr||'')+' tabindex="'+(opts.click?'0':'-1')+'">' +
+    '<div class="band '+d.t+'">'+d.t+'</div>' +
+    (tags ? '<div class="tags">'+tags+'</div>' : '') +
+    '<div class="cname">'+d.name+'</div>' +
+    '<div class="ctext">'+d.txt+'</div>' +
+    foot + '</div>';
+}
+function hoursBadge(p){
+  return '<span class="hours-badge'+(p.hours<0?' neg':'')+'">'+p.hours+' h</span>';
+}
+function render(){
+  if (!state) return;
+  $('roundStamp').textContent = 'ROUND ' + String(Math.min(state.round,state.maxRounds)).padStart(2,'0') + ' / ' + state.maxRounds;
+  const p0 = state.players[0];
+  const top = state.discard[state.discard.length-1];
+  $('discardPile').innerHTML = '<span>Discard · '+state.discard.length+'</span><b>'+(top?top:'—')+'</b>';
+  $('turnInd').innerHTML = state.over ? 'Office closed.' :
+    (cur().isHuman ? '<b>Your turn</b> — the clock is ticking' : B(cur().name)+' is working…');
+
+  // opponents
+  let oh = '';
+  for (const p of state.players.slice(1)){
+    const supp = p.tab.some(c=>DEFS[c.key].t==='weapon');
+    let slots = '';
+    for (const c of p.tab) slots += cardHTMLv(c,{inPlay:true, sm:true, suppressed:supp && DEFS[c.key].t!=='weapon' && !c.nepo && !c.ext});
+    for (let i=p.tab.length;i<3;i++) slots += '<div class="slot-empty" style="width:112px;min-height:132px">EMPTY</div>';
+    let hidden = '<div class="hidden-hand">';
+    for (let i=0;i<p.hand.length;i++) hidden += '<span class="hidden-card"></span>';
+    hidden += '</div>';
+    oh += '<div class="zone'+(cur()===p && !state.over?' active-turn':'')+'">' +
+      '<div class="zone-title">'+p.name+' '+hoursBadge(p)+'<span class="meta">hand: '+p.hand.length+'</span></div>' +
+      '<div class="desk-slots" style="min-height:134px">'+slots+'</div>' +
+      '<div style="margin-top:8px">'+hidden+'</div></div>';
+  }
+  $('oppRow').innerHTML = oh;
+
+  // my desk
+  $('myDeskZone').classList.toggle('active-turn', cur()===p0 && !state.over);
+  $('myHours').outerHTML = hoursBadge(p0).replace('class="hours-badge','id="myHours" class="hours-badge');
+  const supp0 = p0.tab.some(c=>DEFS[c.key].t==='weapon');
+  $('myDeskMeta').textContent = supp0 ? '⚠ a weapon on your desk is freezing unprotected non-weapon cards' : '';
+  let dh = '';
+  const canAct = state.phase==='action' && cur()===p0;
+  for (const c of p0.tab)
+    dh += cardHTMLv(c,{inPlay:true, click:canAct, attr:'data-tab="'+c.uid+'"', suppressed:supp0 && DEFS[c.key].t!=='weapon' && !c.nepo && !c.ext});
+  for (let i=p0.tab.length;i<3;i++) dh += '<div class="slot-empty">EMPTY SLOT</div>';
+  $('myDesk').innerHTML = dh;
+
+  // my hand
+  let hh = '';
+  for (const c of p0.hand)
+    hh += cardHTMLv(c,{click:canAct, drawn:c.uid===state.justDrawn, attr:'data-hand="'+c.uid+'"'});
+  if (!p0.hand.length) hh = '<div class="slot-empty" style="width:100%">EMPTY HAND</div>';
+  $('myHand').innerHTML = hh;
+  $('myHandMeta').textContent = p0.hand.length + ' card' + (p0.hand.length===1?'':'s');
+
+  // action bar
+  $('drawBtn').disabled = !(state.phase==='turnStart' && cur()===p0 && !state.over);
+  $('skipBtn').disabled = $('drawBtn').disabled;
+  if (state.over) $('hint').innerHTML = 'Game over — see final timesheet.';
+  else if (cur()!==p0) $('hint').innerHTML = B(cur().name)+' is taking their turn…';
+  else if (state.phase==='turnStart') $('hint').innerHTML = 'Your turn: '+B('draw a card')+' (then take one action) or '+B('skip')+'.';
+  else if (state.phase==='action') $('hint').innerHTML = 'Take '+B('one action')+': click a hand card to play/use/toss it, or click a desk card to discard &amp; settle it.';
+}
+
+/* ================= Core mechanics ================= */
+function gain(p, c, n, depth){
+  if (n<=0) return;
+  c.tokens += n;
+  // Sharing is Caring hook: pile-earnings on p's cards feed sharing cards linked to p
+  if (!depth){
+    for (const q of state.players){
+      const qSupp = q.tab.some(x=>DEFS[x.key].t==='weapon');
+      for (const s of q.tab){
+        if (s.key==='sharing' && s.link===p.id && (!qSupp || s.nepo || s.ext) && s.age <= lifespan(s)){
+          gain(q, s, n, 1);
+          log(B(q.name)+"'s Sharing is Caring earns +"+n+"h (following "+p.name+").", 'good');
+        }
+      }
+    }
+  }
+}
+async function expireCard(p, c, cause, bypassHelpers){
+  if (!p.tab.includes(c)) return;
+  if (c.nepo && !bypassHelpers){
+    log(B(p.name)+"'s "+B(DEFS[c.key].name)+' is protected by '+B('Nepotism')+' and does not expire ('+cause+').', 'good');
+    render();
+    return;
+  }
+  p.tab.splice(p.tab.indexOf(c),1);
+  state.discard.push(DEFS[c.key].name);
+  const d = DEFS[c.key];
+  const lost = c.tokens; c.tokens = 0;
+  let msg = B(p.name)+"'s "+B(d.name)+' expired ('+cause+')';
+  if (lost>0) msg += ' — '+lost+'h on it are lost';
+  if (d.neg && cause!=='voided'){ p.hours -= d.neg; msg += ' and '+p.name+' pays the '+d.neg+'h cost'; }
+  log(msg+'.', 'bad');
+  render();
+  // Sharing voids: any sharing owned by p, or linked to p, dies too
+  for (const q of state.players){
+    for (const s of [...q.tab]){
+      if (s.key==='sharing' && s!==c && (q.id===p.id || s.link===p.id)){
+        await expireCard(q, s, 'voided — a linked card expired', bypassHelpers);
+      }
+    }
+  }
+}
+/* Voluntary / forced discard of an in-play card. Returns after settling. */
+async function settleDiscard(p, c, how, voided){
+  if (!p.tab.includes(c)) return;
+  p.tab.splice(p.tab.indexOf(c),1);
+  state.discard.push(DEFS[c.key].name);
+  const d = DEFS[c.key];
+  if (voided){
+    log(B(p.name)+"'s "+B(d.name)+' is voided'+(c.tokens?(' — '+c.tokens+'h lost'):'')+' ('+how+').', 'bad');
+  } else if (c.owed > 0){
+    log(B(p.name)+' discards '+B(d.name)+' early, forfeiting the '+c.owed+'h still owed ('+how+').', 'bad');
+  } else {
+    let banked = c.tokens;
+    if (c.key==='professional' && c.age>=8 && c.age<=lifespan(c)) banked += 10;
+    if (c.key==='parasite' && c.attacker!==null){
+      const remain = Math.max(0, 4 - c.transfers);
+      if (remain>0){
+        p.hours -= remain; byId(c.attacker).hours += remain;
+        log(B(p.name)+' discards '+B('Parasite')+' and pays '+byId(c.attacker).name+' the remaining '+remain+'h.', 'bad');
+      } else log(B(p.name)+' discards the spent '+B('Parasite')+'.');
+    } else {
+      p.hours += banked;
+      log(B(p.name)+' discards '+B(d.name)+(banked>0?(' and banks '+B('+'+banked+'h')):'')+' ('+how+').', banked>0?'good':'');
+    }
+  }
+  c.tokens = 0;
+  render();
+}
+/* Excused reaction. Returns true if blocked. */
+async function tryExcused(target, weaponName, attacker){
+  const ex = target.hand.find(c=>c.key==='excused');
+  if (!ex) return false;
+  let block;
+  if (target.isHuman){
+    block = await modal({
+      title:'Incoming: '+weaponName,
+      body:(attacker?attacker.name:'The office')+' is hitting you with '+B(weaponName)+'. You hold an '+B('Excused')+' — use it to cancel? (Free — doesn\u2019t cost your turn.)',
+      choices:[
+        {label:'Use Excused — cancel it', value:true},
+        {label:'Take the hit, keep Excused', value:false, danger:true},
+      ]});
+  } else {
+    const worth = ['deadline','stockMarket','parasite'].includes(
+      Object.keys(DEFS).find(k=>DEFS[k].name===weaponName) || '');
+    block = worth;
+  }
+  if (block){
+    target.hand.splice(target.hand.indexOf(ex),1);
+    state.discard.push('Excused');
+    log(B(target.name)+' plays '+B('Excused')+' — '+weaponName+' is cancelled.', 'good');
+    render();
+  }
+  return block;
+}
+/* Place a play weapon on target's desk. */
+async function receivePlayWeapon(target, c, attacker){
+  const d = DEFS[c.key];
+  const blocked = await tryExcused(target, d.name, attacker);
+  if (blocked){ state.discard.push(d.name); return; }
+  if (target.tab.length >= 3){
+    let victim;
+    if (target.isHuman){
+      const v = await modal({
+        title:'Make room on your desk',
+        body:B(d.name)+' must be placed on your desk, which is full. Choose one of your cards to discard (normal banking applies).',
+        choices: target.tab.map(x=>({
+          label:DEFS[x.key].name,
+          sub:(x.owed>0 ? 'still owes '+x.owed+'h — forfeited if discarded' : 'banks '+bankPreview(x)+'h'),
+          value:x.uid}))});
+      victim = target.tab.find(x=>x.uid===v);
+    } else {
+      victim = target.tab.slice().sort((a,b)=>bankPreview(a)-bankPreview(b))[0];
+    }
+    await settleDiscard(target, victim, 'making room for '+d.name);
+  }
+  if (d.neg){ target.hours -= d.neg; c.owed = d.neg; }
+  if (c.key==='parasite') c.attacker = attacker ? attacker.id : null;
+  c.age = 0;
+  target.tab.push(c);
+  log(B(d.name)+' lands on '+B(target.name)+"'s desk"+(d.neg?(' (−'+d.neg+'h up front)'):'')+'. Their unprotected non-weapon cards are frozen while it sits there.', 'bad');
+  render();
+}
+function bankPreview(c){
+  if (c.owed>0) return -c.owed;
+  let v = c.tokens;
+  if (c.key==='professional' && c.age>=8 && c.age<=lifespan(c)) v += 10;
+  if (c.key==='parasite') v = -(Math.max(0,4-c.transfers));
+  return v;
+}
+
+/* ================= Aging ================= */
+async function agingPhase(p){
+  if (!p.tab.length) return;
+  const suppressed = p.tab.some(c=>DEFS[c.key].t==='weapon');
+  const parts = [];
+  for (const c of [...p.tab]){
+    if (!p.tab.includes(c)) continue;
+    c.age++;
+    const d = DEFS[c.key];
+    const isW = d.t==='weapon';
+    const withinDeadline = c.age <= lifespan(c);
+    if (withinDeadline && (isW || !suppressed || c.nepo || c.ext)){
+      if (c.owed > 0){
+        c.owed--; p.hours++;
+        parts.push(d.name+' returns 1h ('+(c.owed?('−'+c.owed+' left'):'paid off')+')');
+      } else switch(c.key){
+        case 'onTheClock': gain(p,c,1); parts.push('On the Clock +1h ('+c.tokens+'h)'); break;
+        case 'risky': {
+          const v = c.age - 5;
+          if (v>=1){ gain(p,c,1); }
+          if (c.age===8){ gain(p,c,5); parts.push('Risky surges to '+c.tokens+'h — cash out now!'); }
+          else if (v>=1) parts.push('Risky +1h ('+c.tokens+'h)');
+          break;
+        }
+        case 'unpredictable': {
+          const step = Math.ceil(c.age/2);
+          if (c.age % 2 === 1){ gain(p,c,step); parts.push('Unpredictable +'+step+'h ('+c.tokens+'h)'); }
+          else { const rm = Math.min(step, c.tokens); c.tokens -= rm; parts.push('Unpredictable −'+rm+'h ('+c.tokens+'h)'); }
+          break;
+        }
+        case 'stockMarket': {
+          if (c.age - 4 >= 1){ gain(p,c,1); parts.push(d.name+' +1h ('+c.tokens+'h)'); }
+          break;
+        }
+        case 'parasite': {
+          if (c.transfers < 4 && c.attacker!==null){
+            p.hours--; byId(c.attacker).hours++; c.transfers++;
+            parts.push('Parasite siphons 1h to '+byId(c.attacker).name+' ('+c.transfers+'/4)');
+          }
+          break;
+        }
+      }
+    }
+    if (c.age > lifespan(c) && !c.nepo){
+      await expireCard(p, c, 'past its deadline');
+    }
+  }
+  if (parts.length) log(B(p.name)+"'s desk: "+parts.join(' · ')+'.');
+  if (suppressed && p.tab.some(x=>DEFS[x.key].t!=='weapon' && !x.nepo && !x.ext))
+    log(B(p.name)+"'s unprotected non-weapon cards are frozen by a weapon on the desk.");
+  render();
+}
+
+/* ================= Immediate weapons ================= */
+async function execTardy(actor, owner, card){
+  if (card.nepo || card.ext){
+    state.discard.push('Tardy');
+    const helper = card.nepo ? 'Nepotism' : 'Extension';
+    log(B(owner.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B(helper)+' — Tardy has no effect.', 'good');
+    render();
+    return;
+  }
+  if (owner !== actor && await tryExcused(owner, 'Tardy', actor)){ state.discard.push('Tardy'); return; }
+  state.discard.push('Tardy');
+  card.age++;
+  log(B(actor.name)+' plays '+B('Tardy')+' on '+owner.name+"'s "+DEFS[card.key].name+' — it ages a round with no pay.', 'bad');
+  if (card.age > lifespan(card) && !card.nepo) await expireCard(owner, card, 'aged out by Tardy');
+  render();
+}
+async function execDeadline(actor, owner, card){
+  if (card.nepo || card.ext){
+    state.discard.push('Deadline');
+    const helper = card.nepo ? 'Nepotism' : 'Extension';
+    log(B(owner.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B(helper)+' — Deadline has no effect.', 'good');
+    render();
+    return;
+  }
+  if (await tryExcused(owner, 'Deadline', actor)){ state.discard.push('Deadline'); return; }
+  state.discard.push('Deadline');
+  log(B(actor.name)+' slams a '+B('Deadline')+' on '+owner.name+"'s "+DEFS[card.key].name+'.', 'bad');
+  await expireCard(owner, card, 'hit by Deadline');
+}
+async function execScammer(actor, target){
+  if (await tryExcused(target, 'Scammer', actor)){ state.discard.push('Scammer'); return; }
+  state.discard.push('Scammer');
+  if (target.hours >= 1){
+    target.hours--; actor.hours++;
+    log(B(actor.name)+' uses '+B('Scammer')+' to steal 1h from '+B(target.name)+'.', 'bad');
+  } else log(B(actor.name)+"'s "+B('Scammer')+' finds nothing — '+target.name+' is broke.');
+  render();
+}
+async function execQuit(actor, target, zone, card){
+  if (zone==='tab' && card && (card.nepo || card.ext)){
+    state.discard.push('Quit');
+    const helper = card.nepo ? 'Nepotism' : 'Extension';
+    log(B(target.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B(helper)+' — Quit has no effect.', 'good');
+    render();
+    return;
+  }
+  if (await tryExcused(target, 'Quit', actor)){ state.discard.push('Quit'); return; }
+  state.discard.push('Quit');
+  if (zone==='hand'){
+    if (!target.hand.length){ log(B(actor.name)+"'s "+B('Quit')+' fizzles — '+target.name+' has no hand.'); return; }
+    const gone = target.hand[rint(target.hand.length)];
+    binFromHand(target, gone, 'forced by '+actor.name+"'s Quit");
+    target.refill = true;
+    log(B(target.name)+' will refill to 5 cards next turn.');
+  } else {
+    await settleDiscard(target, card, 'forced out by Quit', true);
+    log(B(actor.name)+"'s "+B('Quit')+' voided that card outright.', 'bad');
+  }
+  render();
+}
+async function execFX(actor, target){
+  if (await tryExcused(target, 'Foreign Exchange', actor)){ state.discard.push('Foreign Exchange'); return; }
+  state.discard.push('Foreign Exchange');
+  if (!actor.hand.length || !target.hand.length){
+    log(B(actor.name)+"'s "+B('Foreign Exchange')+' fizzles — someone has an empty hand.');
+    return;
+  }
+  const ai = rint(actor.hand.length), ti = rint(target.hand.length);
+  const a = actor.hand[ai], t = target.hand[ti];
+  actor.hand[ai] = t; target.hand[ti] = a;
+  log(B(actor.name)+' runs a '+B('Foreign Exchange')+' with '+B(target.name)+' — one random card swaps each way.', 'bad');
+  render();
+}
+
+/* ================= Alerts ================= */
+async function resolveAlert(p, key){
+  state.discard.push(DEFS[key].name);
+  log('🚨 '+B(p.name)+' draws an ALERT: '+B(DEFS[key].name)+'!', 'alert');
+  if (p.isHuman) await notify('ALERT: '+DEFS[key].name, DEFS[key].txt+' This resolves immediately and uses your whole turn.');
+  if (key==='fired'){
+    for (const c of [...p.tab]) await settleDiscard(p, c, 'Fired! alert');
+  } else if (key==='recession'){
+    for (const q of state.players)
+      for (const c of [...q.tab]) await settleDiscard(q, c, 'Recession alert');
+  } else if (key==='amnesia'){
+    for (const q of state.players){
+      for (const c of q.tab){
+        const d = DEFS[c.key];
+        c.tokens = 0; c.age = 0; c.ext = 0; c.nepo = false; c.transfers = 0;
+        if (d.neg){ q.hours -= (d.neg - c.owed); c.owed = d.neg; }
+      }
+    }
+    log('Everyone\u2019s cards reset to freshly played — earnings gone, costs re-charged.', 'alert');
+  } else if (key==='performanceReview'){
+    log(B(p.name)+' must dump their whole hand — costs are charged, but no card effects trigger.', 'alert');
+    for (const c of [...p.hand]) binFromHand(p, c, 'Performance Review');
+    while (p.hand.length < 5) p.hand.push(makeCard(drawKey(false)));
+    log(B(p.name)+' redraws to 5 cards.');
+  }
+  render();
+}
+
+/* ================= Choice helpers (human ⇄ AI) ================= */
+function leaderOf(p){
+  const os = others(p);
+  return os.slice().sort((a,b)=> b.hours - a.hours ||
+    b.tab.reduce((s,c)=>s+c.tokens,0) - a.tab.reduce((s,c)=>s+c.tokens,0))[0];
+}
+async function chooseOpponent(actor, title, body){
+  if (!actor.isHuman) return leaderOf(actor);
+  const v = await modal({title, body, choices: others(actor).map(q=>({
+    label:q.name, sub:q.hours+'h · '+q.tab.length+' cards on desk · '+q.hand.length+' in hand', value:q.id}))});
+  return byId(v);
+}
+async function chooseQuitZone(actor, target){
+  if (!actor.isHuman){
+    const best = target.tab.filter(c=>bankPreview(c)>=2).sort((a,b)=>bankPreview(b)-bankPreview(a))[0];
+    return best ? {zone:'tab', card:best} : {zone:'hand'};
+  }
+  const choices = target.tab.map(c=>({
+    label:'Void their '+DEFS[c.key].name,
+    sub:'R'+c.age+'/'+lifespan(c)+(c.owed>0?(' · owes '+c.owed+'h'):(' · '+c.tokens+'h on it')), value:c.uid}));
+  choices.push({label:'A random card from their hand', sub:'They refill to 5 next turn', value:'hand'});
+  const v = await modal({title:'Quit — pick the damage', body:'What must '+target.name+' discard? (It is voided — no effects, no banking.)', choices});
+  return v==='hand' ? {zone:'hand'} : {zone:'tab', card:target.tab.find(c=>c.uid===v)};
+}
+/* pick any in-play card; if allowAny, self cards included */
+async function chooseAnyPlayedCard(actor, title, body, allowSelf){
+  const cands = [];
+  for (const q of state.players){
+    if (!allowSelf && q.id===actor.id) continue;
+    for (const c of q.tab) cands.push({owner:q, card:c});
+  }
+  if (!cands.length) return null;
+  if (!actor.isHuman){
+    return cands.sort((a,b)=>bankPreview(b.card)-bankPreview(a.card))[0];
+  }
+  const v = await modal({title, body, choices:cands.map(x=>({
+    label:x.owner.name+' — '+DEFS[x.card.key].name,
+    sub:'R'+x.card.age+'/'+lifespan(x.card)+(x.card.owed>0?(' · owes '+x.card.owed+'h'):(' · '+x.card.tokens+'h on it')),
+    value:x.card.uid}))});
+  const hit = cands.find(x=>x.card.uid===v);
+  return hit || null;
+}
+
+/* ================= Using a card from hand (shared human/AI entry points) ================= */
+async function useHandCard(p, c, plan){
+  // plan: for AI-supplied targets; humans get prompts
+  const d = DEFS[c.key];
+  const removeFromHand = ()=>{ const i=p.hand.indexOf(c); if(i>=0) p.hand.splice(i,1); };
+  switch (c.key){
+    case 'onTheClock': case 'professional': case 'risky': case 'unpredictable': case 'sharing': {
+      removeFromHand();
+      if (d.neg){ p.hours -= d.neg; c.owed = d.neg; }
+      if (c.key==='sharing'){
+        const t = plan && plan.target ? plan.target : await chooseOpponent(p, 'Sharing is Caring', 'Whose earnings will this card mirror?');
+        c.link = t.id;
+        log(B(p.name)+' plays '+B('Sharing is Caring')+', hitching a ride on '+B(t.name)+'.');
+      } else {
+        log(B(p.name)+' plays '+B(d.name)+(d.neg?(' (−'+d.neg+'h up front)'):'')+'.');
+      }
+      c.age = 0;
+      p.tab.push(c);
+      break;
+    }
+    case 'stockMarket': case 'parasite': {
+      const t = plan && plan.target ? plan.target : await chooseOpponent(p, 'Deploy '+d.name, 'Whose desk does this land on?');
+      removeFromHand();
+      await receivePlayWeapon(t, c, p);
+      break;
+    }
+    case 'scammer': {
+      const t = plan && plan.target ? plan.target : await chooseOpponent(p, 'Scammer', 'Steal 1 hour from whom?');
+      removeFromHand(); await execScammer(p, t); break;
+    }
+    case 'foreignExchange': {
+      const t = plan && plan.target ? plan.target : await chooseOpponent(p, 'Foreign Exchange', 'Swap one random card with whom?');
+      removeFromHand(); await execFX(p, t); break;
+    }
+    case 'tardy': {
+      const tg = plan && plan.cardTarget ? plan.cardTarget : await chooseAnyPlayedCard(p, 'Tardy', 'Age which card in play by 1 round? (No earnings — it just gets closer to expiring.)', true);
+      if (!tg){ await notify('Tardy','No cards in play to target.'); return false; }
+      removeFromHand(); await execTardy(p, tg.owner, tg.card); break;
+    }
+    case 'deadline': {
+      const tg = plan && plan.cardTarget ? plan.cardTarget : await chooseAnyPlayedCard(p, 'Deadline', 'Expire which opposing card? (Its hours are lost; costs are charged.)', false);
+      if (!tg){ await notify('Deadline','No opposing cards in play.'); return false; }
+      removeFromHand(); await execDeadline(p, tg.owner, tg.card); break;
+    }
+    case 'quit': {
+      const t = plan && plan.target ? plan.target : await chooseOpponent(p, 'Quit', 'Force whom to discard?');
+      const zc = plan && plan.zone ? plan : await chooseQuitZone(p, t);
+      removeFromHand(); await execQuit(p, t, zc.zone, zc.card); break;
+    }
+    case 'extension': {
+      const tg = plan && plan.cardTarget ? plan.cardTarget : await chooseAnyPlayedCard(p, 'Extension', 'Protect which card from weapons and delay its expiration by 5 rounds? (Alerts bypass it.)', true);
+      if (!tg){ await notify('Extension','No cards in play to extend.'); return false; }
+      removeFromHand(); state.discard.push('Extension');
+      tg.card.ext++;
+      log(B(p.name)+' files an '+B('Extension')+' on '+tg.owner.name+"'s "+DEFS[tg.card.key].name+' (+5 rounds; weapons cannot affect it).', 'good');
+      break;
+    }
+    case 'nepotism': {
+      const tg = plan && plan.cardTarget ? plan.cardTarget : await chooseAnyPlayedCard(p, 'Nepotism', 'Protect which card from weapons and normal expiry? (Alerts bypass it; earning stops past its deadline.)', true);
+      if (!tg){ await notify('Nepotism','No cards in play to protect.'); return false; }
+      removeFromHand(); state.discard.push('Nepotism');
+      tg.card.nepo = true;
+      log(B(p.name)+' invokes '+B('Nepotism')+' — weapons cannot affect '+tg.owner.name+"'s "+DEFS[tg.card.key].name+', and only Alerts can force it out.', 'good');
+      break;
+    }
+    case 'newbie': {
+      removeFromHand(); state.discard.push('Newbie');
+      log(B(p.name)+' plays '+B('Newbie')+' — dead hand, five fresh cards.');
+      for (const x of [...p.hand]) binFromHand(p, x, 'Newbie redraw');
+      for (let i=0;i<5;i++) p.hand.push(makeCard(drawKey(false)));
+      break;
+    }
+    case 'excused': {
+      const weapons = p.tab.filter(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
+      if (!weapons.length){
+        if (p.isHuman) await notify('Excused','There are no unprotected weapon cards on your desk to discard. Excused remains available to cancel an incoming weapon.');
+        return false;
+      }
+      let target = plan && plan.cardTarget ? plan.cardTarget.card : null;
+      if (!target && p.isHuman){
+        const uid = await modal({
+          title:'Excused — clear your desk',
+          body:'Choose one weapon on your desk to discard. Its remaining effect is cancelled.',
+          choices:weapons.map(x=>({
+            label:DEFS[x.key].name,
+            sub:x.owed>0 ? 'Still owes '+x.owed+'h — removed with no further penalty' : 'Remove it immediately',
+            value:x.uid}))});
+        target = weapons.find(x=>x.uid===uid);
+      }
+      if (!target) target = weapons[0];
+      removeFromHand();
+      state.discard.push('Excused');
+      p.tab.splice(p.tab.indexOf(target),1);
+      state.discard.push(DEFS[target.key].name);
+      target.tokens = 0;
+      log(B(p.name)+' uses '+B('Excused')+' to discard '+B(DEFS[target.key].name)+' from their desk. Its remaining effect is cancelled.', 'good');
+      break;
+    }
+  }
+  render();
+  return true;
+}
+/* Any card leaving a hand for the bin = "played and instantly discarded":
+   its up-front cost is charged, nothing else triggers. */
+function binFromHand(p, c, why){
+  const i = p.hand.indexOf(c);
+  if (i>=0) p.hand.splice(i,1);
+  const d = DEFS[c.key];
+  state.discard.push(d.name);
+  if (d.neg){
+    p.hours -= d.neg;
+    log(B(p.name)+' discards '+B(d.name)+' from hand — played &amp; binned, paying its '+B('−'+d.neg+'h')+' cost ('+why+').', 'bad');
+  } else {
+    log(B(p.name)+' discards '+d.name+' from hand (no effect'+(why?(' — '+why):'')+').');
+  }
+}
+function tossHandCard(p, c){
+  binFromHand(p, c, '');
+  render();
+}
+
+/* ================= Turn engine ================= */
+function startGame(rounds){
+  state = newState(rounds);
+  state.justDrawn = null;
+  $('log').innerHTML = '';
+  for (const p of state.players)
+    for (let i=0;i<5;i++) p.hand.push(makeCard(drawKey(false)));
+  log('Doors open. Everyone starts with '+B('10 hours')+' and 5 cards. '+B(state.maxRounds+' rounds')+' on the clock.');
+  render();
+  setTimeout(runTurn, 60);
+}
+async function runTurn(){
+  if (state.over) return;
+  const p = cur();
+  state.justDrawn = null;
+  if (p.refill){
+    p.refill = false;
+    let n = 0;
+    while (p.hand.length < 5){ p.hand.push(makeCard(drawKey(false))); n++; }
+    if (n) log(B(p.name)+' refills '+n+' card'+(n===1?'':'s')+' after Quit.');
+  }
+  await agingPhase(p);
+  if (state.over) return;
+  if (p.isHuman){
+    state.phase = 'turnStart';
+    render();
+  } else {
+    state.phase = 'idle';
+    render();
+    await sleep(AI_DELAY);
+    await aiTurn(p);
+    endTurn();
+  }
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function endTurn(){
+  state.phase = 'idle';
+  state.justDrawn = null;
+  state.turnIdx++;
+  if (state.turnIdx >= state.players.length){
+    state.turnIdx = 0;
+    if (state.round >= state.maxRounds){ finishGame(); return; }
+    state.round++;
+    log('— punch clock rolls to '+B('round '+state.round)+' —');
+  }
+  render();
+  setTimeout(runTurn, AI_DELAY? Math.min(AI_DELAY,400) : 1);
+}
+async function finishGame(){
+  state.over = true;
+  log('🔔 '+B('Closing time.')+' Cards still in play settle as if discarded.', 'alert');
+  for (const p of state.players){
+    for (const c of [...p.tab]) await settleDiscard(p, c, 'end-of-game settlement');
+  }
+  render();
+  const sorted = state.players.slice().sort((a,b)=>b.hours-a.hours);
+  const top = sorted[0].hours;
+  const winners = sorted.filter(p=>p.hours===top);
+  let rows = '';
+  for (const p of sorted)
+    rows += '<tr class="'+(p.hours===top?'winner':'')+'"><td>'+(p.hours===top?'★':'')+'</td><td>'+p.name+'</td><td>'+p.hours+' h</td></tr>';
+  const title = winners.some(w=>w.isHuman)
+    ? (winners.length>1 ? 'SHARED PROMOTION' : 'PROMOTED')
+    : 'PASSED OVER';
+  log('Final timesheet: '+sorted.map(p=>p.name+' '+p.hours+'h').join(' · ')+'. '+B(winners.map(w=>w.name).join(' & '))+' win'+(winners.length>1?'':'s')+'!', 'good');
+  const again = await modal({
+    title:'Final timesheet',
+    body:'<span class="promo-stamp">'+title+'</span><table class="final-table"><tr><th></th><th>Employee</th><th>Hours</th></tr>'+rows+'</table>' +
+      (winners.length>1 ? 'Tie at the top — the win is shared.' : B(winners[0].name)+' logged the most hours.'),
+    choices:[{label:'Play again', value:true},{label:'Close', value:false}]});
+  if (again) showStart();
+}
+
+/* ================= Human turn actions ================= */
+$('skipBtn').onclick = () => {
+  if (state.phase!=='turnStart' || !cur().isHuman) return;
+  log(B('You')+' skip the turn (cards still aged).');
+  endTurn();
+};
+$('drawBtn').onclick = async () => {
+  if (state.phase!=='turnStart' || !cur().isHuman) return;
+  const p = cur();
+  state.phase = 'busy';
+  const key = drawKey(true);
+  if (DEFS[key].t==='alert'){
+    render();
+    await resolveAlert(p, key);
+    endTurn();
+    return;
+  }
+  const c = makeCard(key);
+  p.hand.push(c);
+  state.justDrawn = c.uid;
+  log(B('You')+' draw a card.');
+  state.phase = 'action';
+  render();
+};
+document.addEventListener('click', async (ev)=>{
+  const t = ev.target.closest('[data-hand],[data-tab]');
+  if (!t || !state || state.phase!=='action' || !cur().isHuman) return;
+  const p = state.players[0];
+  if (t.dataset.hand){
+    const c = p.hand.find(x=>x.uid==t.dataset.hand);
+    if (!c) return;
+    await handCardMenu(p, c);
+  } else if (t.dataset.tab){
+    const c = p.tab.find(x=>x.uid==t.dataset.tab);
+    if (!c) return;
+    const pv = bankPreview(c);
+    const v = await modal({
+      title:'Discard '+DEFS[c.key].name+'?',
+      body:(c.owed>0
+        ? 'It still owes you '+c.owed+'h — discarding now forfeits that.'
+        : (c.key==='parasite' ? 'Discarding pays the attacker the remaining balance at once.'
+          : 'You\u2019ll bank '+B(pv+'h')+' from it.'))+' This is your one action for the turn.',
+      choices:[{label:'Discard & settle', value:true, danger:pv<0},{label:'Cancel', value:false}]});
+    if (v){ state.phase='busy'; await settleDiscard(p, c, 'your call'); endTurn(); }
+  }
+});
+async function handCardMenu(p, c){
+  const d = DEFS[c.key];
+  const choices = [];
+  if (d.t==='play'){
+    if (p.tab.length < 3) choices.push({label:'Play it on your desk', sub:d.neg?('Costs '+d.neg+'h up front'):'Starts earning next round', value:'play'});
+    else choices.push({label:'(Desk is full — can\u2019t play it)', sub:'Discard a desk card on a future turn to make room', value:null});
+  } else if (d.t==='weapon'){
+    choices.push({label:(d.sub==='imm'?'Use it':'Play it on an opponent'), sub:d.txt, value:'play'});
+  } else if (c.key==='excused'){
+    const inPlayWeapons = p.tab.filter(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
+    if (inPlayWeapons.length)
+      choices.push({label:'Discard a weapon from your desk', sub:'Cancels an unprotected weapon’s remaining effect; counts as your action', value:'play'});
+    else
+      choices.push({label:'(No removable weapon on your desk)', sub:'Protected weapons remain protected; Excused will still cancel an incoming weapon', value:null});
+  } else {
+    choices.push({label:'Use it', sub:d.txt, value:'play'});
+  }
+  choices.push({label:'Toss it (no effect)', sub:'Counts as your action', value:'toss', danger:true});
+  choices.push({label:'Cancel', value:'cancel'});
+  const v = await modal({title:d.name, body:d.txt, choices});
+  if (v==='cancel' || v===null) return;
+  state.phase = 'busy';
+  if (v==='toss'){ tossHandCard(p, c); endTurn(); return; }
+  const ok = await useHandCard(p, c);
+  if (!ok){ state.phase='action'; render(); return; }
+  endTurn();
+}
+
+/* ================= AI ================= */
+async function aiTurn(p){
+  // must draw (skipping is almost never right when tossing is free)
+  const key = drawKey(true);
+  if (DEFS[key].t==='alert'){ await resolveAlert(p, key); return; }
+  const c = makeCard(key);
+  p.hand.push(c);
+  log(B(p.name)+' draws a card.');
+  render();
+  await sleep(AI_DELAY/2);
+
+  const L = leaderOf(p);
+  const roundsLeft = state.maxRounds - state.round + 1;
+  const find = k => p.hand.find(x=>x.key===k);
+
+  // 1) bank ripe desk cards
+  const ripe = p.tab.find(x =>
+    (x.key==='professional' && x.age>=8 && x.age<=lifespan(x)) ||
+    (x.key==='risky' && x.age===8) ||
+    (x.age>=lifespan(x) && x.owed===0 && bankPreview(x)>=2));
+  if (ripe){ await settleDiscard(p, ripe, 'cashing out'); return; }
+  // 2) shed a paid-off weapon squatting on the desk
+  const squat = p.tab.find(x=>DEFS[x.key].t==='weapon' && x.owed===0 && x.key!=='parasite');
+  if (squat && p.tab.some(x=>DEFS[x.key].t!=='weapon')){ await settleDiscard(p, squat, 'clearing the desk'); return; }
+  const paidParasite = p.tab.find(x=>x.key==='parasite' && x.transfers>=4);
+  if (paidParasite){ await settleDiscard(p, paidParasite, 'clearing the desk'); return; }
+
+  // 3) weapons at the leader
+  const dl = find('deadline');
+  if (dl){
+    const tgt = L.tab.filter(x=>bankPreview(x)>=3).sort((a,b)=>bankPreview(b.card||b)-bankPreview(a.card||a))[0];
+    if (tgt){ await useHandCard(p, dl, {cardTarget:{owner:L, card:tgt}}); return; }
+  }
+  for (const wk of ['stockMarket','parasite']){
+    const w = find(wk);
+    if (w){ await useHandCard(p, w, {target:L}); return; }
+  }
+  const qt = find('quit');
+  if (qt){
+    const best = L.tab.filter(x=>bankPreview(x)>=2).sort((a,b)=>bankPreview(b)-bankPreview(a))[0];
+    if (best){ await useHandCard(p, qt, {target:L, zone:'tab', card:best}); return; }
+    if (L.hand.length>=3 && Math.random()<0.5){ await useHandCard(p, qt, {target:L, zone:'hand'}); return; }
+  }
+  const sc = find('scammer');
+  if (sc && L.hours>=1){ await useHandCard(p, sc, {target:L}); return; }
+  const td = find('tardy');
+  if (td){
+    const forceOut = L.tab.find(x=>x.age>=lifespan(x)-0 && x.tokens>=1 && !x.nepo && !x.ext) ||
+                     L.tab.find(x=>x.age===lifespan(x)-1 && x.tokens>=3 && !x.nepo && !x.ext);
+    if (forceOut){ await useHandCard(p, td, {cardTarget:{owner:L, card:forceOut}}); return; }
+  }
+
+  // 4) play a good play card
+  if (p.tab.length < 3 && !p.tab.some(x=>DEFS[x.key].t==='weapon')){
+    const prefs = [];
+    if (find('onTheClock') && roundsLeft>=2) prefs.push(find('onTheClock'));
+    if (find('unpredictable') && roundsLeft>=2) prefs.push(find('unpredictable'));
+    if (find('professional') && roundsLeft>=9) prefs.push(find('professional'));
+    if (find('risky') && roundsLeft>=9 && p.hours>=5) prefs.push(find('risky'));
+    if (find('sharing') && roundsLeft>=3) prefs.push(find('sharing'));
+    if (prefs.length){ await useHandCard(p, prefs[0], {target:L}); return; }
+  }
+  // 5) helpers
+  const ex = find('excused');
+  const deskWeapon = p.tab.find(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
+  if (ex && deskWeapon){
+    await useHandCard(p, ex, {cardTarget:{owner:p, card:deskWeapon}}); return;
+  }
+  const ext = find('extension');
+  if (ext){
+    const save = p.tab.filter(x=>x.owed===0 && x.tokens>=3 && x.age>=lifespan(x)-1 && !x.nepo)[0];
+    if (save){ await useHandCard(p, ext, {cardTarget:{owner:p, card:save}}); return; }
+  }
+  const nep = find('nepotism');
+  if (nep){
+    const keep = p.tab.filter(x=>x.owed===0 && x.tokens>=4 && !x.nepo)[0];
+    if (keep){ await useHandCard(p, nep, {cardTarget:{owner:p, card:keep}}); return; }
+  }
+  const nb = find('newbie');
+  if (nb && p.hand.length>=7 &&
+      !p.hand.some(x=>DEFS[x.key].t==='play') ){
+    await useHandCard(p, nb); return;
+  }
+
+  // 6) desk clogged? cash out the best paid-off card to free a slot
+  if (p.tab.length >= 3){
+    const cash = p.tab.filter(x=>x.owed===0 && bankPreview(x)>=3 && !(x.key==='professional' && x.age<8))
+                      .sort((a,b)=>bankPreview(b)-bankPreview(a))[0];
+    if (cash){ await settleDiscard(p, cash, 'freeing up the desk'); return; }
+  }
+  // 7) fallback: toss the least useful card
+  const tossOrder = ['foreignExchange','tardy','nepotism','extension','newbie','sharing','risky','professional','stockMarket','parasite','quit','scammer','deadline','unpredictable','onTheClock','excused'];
+  const toss = p.hand.slice().sort((a,b)=>tossOrder.indexOf(a.key)-tossOrder.indexOf(b.key))[0];
+  // prefer tossing an unplayable play card if desk full
+  const stuckPlay = p.tab.length>=3 ? p.hand.find(x=>DEFS[x.key].t==='play') : null;
+  tossHandCard(p, stuckPlay || toss);
+}
+
+/* ================= Start screen ================= */
+async function showStart(){
+  const root = $('modalRoot');
+  root.innerHTML = '';
+  const ov = document.createElement('div'); ov.className='overlay';
+  const m = document.createElement('div'); m.className='modal';
+  m.innerHTML =
+    '<h2 style="font-size:22px; letter-spacing:5px;">CLOCKED&nbsp;IN</h2>' +
+    '<p>Log more <b style="color:var(--brass)">hours</b> than Dana and Marcus before closing time. Each turn: draw a card and take one action, or skip. Cards on your desk earn (or bleed) hours every round — bank them before they expire. Weapons ruin days. Alerts ruin everyone\u2019s.</p>' +
+    '<p style="display:flex;align-items:center;gap:10px;">Rounds: <input type="number" id="roundsInput" min="8" max="40" value="15"> <span style="font-size:11px;color:var(--text-dim)">(15 recommended — long enough for Professional to pay out)</span></p>' +
+    '<div class="choices"><button class="btn" id="startBtn">Punch in</button></div>' +
+    '<p style="margin-top:12px;font-size:11px;">All rulebook ambiguities are resolved in the <b>House rules</b> panel, bottom-right.</p>';
+  ov.appendChild(m); root.appendChild(ov);
+  document.getElementById('startBtn').onclick = ()=>{
+    let r = parseInt(document.getElementById('roundsInput').value, 10);
+    if (isNaN(r)) r = 15;
+    r = Math.max(8, Math.min(40, r));
+    root.innerHTML = '';
+    startGame(r);
+  };
+}
+showStart();
+</script>
+</body>
+</html>
