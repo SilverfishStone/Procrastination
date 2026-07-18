@@ -1,0 +1,29 @@
+/* Midnight theme – inherits base, overrides colors */
+@import "game.css";
+.root { -fx-background-color: radial-gradient(center 50% 50%, radius 70%, #22204a 0%, #0e0c20 70%, #06060f 100%); }
+.hud-bar { -fx-background-color: rgba(8,6,20,0.94); -fx-border-color: rgba(80,70,180,0.50); }
+.title-label    { -fx-text-fill: #b0a0ff; -fx-effect: dropshadow(gaussian,#b0a0ff70,10,0.4,0,1); }
+.hour-label     { -fx-text-fill: #b0a0ff; }
+.my-hours-label { -fx-text-fill: #d0c0ff; }
+.section-label  { -fx-text-fill: #7060b0; }
+.player-name-active { -fx-text-fill: #c0b0ff; }
+.player-zone    { -fx-border-color: rgba(100,80,200,0.25); }
+.deck-pile      { -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #3a1a7a, #1a0a40); -fx-border-color: #6040c0; }
+.card-header-play   { -fx-background-color: linear-gradient(to right, #3a3a8a, #5a5ac8); }
+.card-header-helper { -fx-background-color: linear-gradient(to right, #2a6a9a, #4aaad8); }
+.card-header-weapon { -fx-background-color: linear-gradient(to right, #5a2a9a, #8a4ae8); }
+.card-header-alert  { -fx-background-color: linear-gradient(to right, #8a1a5a, #c83a9a); }
+.card-facedown  { -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #3a1a7a, #1a0a40); -fx-border-color: #5040a0; }
+.log-area { -fx-text-fill: #8080e0; }
+.log-panel { -fx-border-color: rgba(70,60,160,0.40); }
+.btn { -fx-background-color: rgba(20,15,50,0.90); -fx-text-fill: #9080e0; -fx-border-color: rgba(80,60,180,0.60); }
+.btn:hover { -fx-background-color: rgba(30,20,80,0.95); -fx-text-fill: #c0b0ff; }
+.btn-primary { -fx-background-color: rgba(30,20,80,0.95); -fx-border-color: rgba(100,80,220,0.80); -fx-text-fill: #c0b0ff; }
+.hand-tray { -fx-background-color: rgba(8,6,20,0.92); -fx-border-color: rgba(70,60,160,0.45); }
+.setup-title { -fx-text-fill: #b0a0ff; }
+.setup-subtitle { -fx-text-fill: #504080; }
+.setup-field { -fx-control-inner-background: rgba(12,10,30,0.90); -fx-text-fill: #b0a0f0; -fx-border-color: rgba(80,60,180,0.50); }
+.gameover-title { -fx-text-fill: #b0a0ff; }
+.score-row { -fx-background-color: rgba(12,10,30,0.80); -fx-border-color: rgba(70,60,150,0.40); }
+.score-winner { -fx-background-color: rgba(30,20,80,0.90); -fx-border-color: rgba(100,80,220,0.80); }
+.separator .line { -fx-border-color: rgba(80,60,160,0.30); }

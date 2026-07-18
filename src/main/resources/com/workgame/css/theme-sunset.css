@@ -1,0 +1,28 @@
+@import "game.css";
+.root { -fx-background-color: radial-gradient(center 50% 50%, radius 70%, #5a2a18 0%, #301008 70%, #180504 100%); }
+.hud-bar { -fx-background-color: rgba(20,8,4,0.94); -fx-border-color: rgba(180,80,40,0.45); }
+.title-label    { -fx-text-fill: #ffa060; -fx-effect: dropshadow(gaussian,#ff806050,10,0.4,0,1); }
+.hour-label     { -fx-text-fill: #ffd060; }
+.my-hours-label { -fx-text-fill: #ff9060; }
+.section-label  { -fx-text-fill: #a06040; }
+.player-name-active { -fx-text-fill: #ff9060; }
+.player-zone    { -fx-background-color: rgba(0,0,0,0.20); -fx-border-color: rgba(180,80,40,0.25); }
+.deck-pile      { -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #6a2010, #3a0a04); -fx-border-color: #a04020; }
+.card-header-play   { -fx-background-color: linear-gradient(to right, #8a4a1a, #c07a3a); }
+.card-header-helper { -fx-background-color: linear-gradient(to right, #6a2a3a, #aa5a6a); }
+.card-header-weapon { -fx-background-color: linear-gradient(to right, #7a1a1a, #c03030); }
+.card-header-alert  { -fx-background-color: linear-gradient(to right, #8a2a08, #d04010); }
+.card-facedown  { -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #6a2010, #3a0a04); -fx-border-color: #903020; }
+.log-area { -fx-text-fill: #c08060; }
+.log-panel { -fx-border-color: rgba(160,80,40,0.35); }
+.btn { -fx-background-color: rgba(50,20,10,0.90); -fx-text-fill: #e09060; -fx-border-color: rgba(180,80,40,0.60); }
+.btn:hover { -fx-background-color: rgba(80,30,15,0.95); -fx-text-fill: #ffb080; }
+.btn-primary { -fx-background-color: rgba(80,30,10,0.95); -fx-border-color: rgba(220,120,50,0.80); -fx-text-fill: #ffc080; }
+.hand-tray { -fx-background-color: rgba(20,8,4,0.92); -fx-border-color: rgba(160,80,40,0.45); }
+.setup-title { -fx-text-fill: #ffa060; }
+.setup-subtitle { -fx-text-fill: #704030; }
+.setup-field { -fx-control-inner-background: rgba(25,10,5,0.90); -fx-text-fill: #e0a070; -fx-border-color: rgba(160,70,30,0.50); }
+.gameover-title { -fx-text-fill: #ffa060; }
+.score-row { -fx-background-color: rgba(25,10,5,0.80); -fx-border-color: rgba(150,70,30,0.40); }
+.score-winner { -fx-background-color: rgba(80,30,10,0.90); -fx-border-color: rgba(200,110,40,0.80); }
+.separator .line { -fx-border-color: rgba(160,80,40,0.30); }

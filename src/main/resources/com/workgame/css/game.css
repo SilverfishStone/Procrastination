@@ -1,0 +1,235 @@
+/* ═══════════════════════════════════════════════════════════════
+   WorkGame – Felt Theme (base)
+   ═══════════════════════════════════════════════════════════════ */
+
+* { -fx-font-family: "JetBrains Mono", "Courier New", monospace; }
+
+/* ── Root ───────────────────────────────────────────────────────── */
+.root {
+    -fx-background-color: radial-gradient(center 50% 50%, radius 70%, #1e5530 0%, #0f3018 70%, #08200f 100%);
+}
+
+/* ── HUD ────────────────────────────────────────────────────────── */
+.hud-bar {
+    -fx-background-color: rgba(5,15,8,0.92);
+    -fx-border-color: rgba(80,140,60,0.45);
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 7 16 7 16;
+}
+.title-label        { -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #f5d060; -fx-effect: dropshadow(gaussian,#f5d06070,10,0.4,0,1); }
+.hour-label         { -fx-font-size: 14px; -fx-text-fill: #f5d060; -fx-font-weight: bold; }
+.my-hours-label     { -fx-font-size: 15px; -fx-text-fill: #a0ee60; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian,#80d04050,6,0.3,0,0); }
+.section-label      { -fx-font-size: 10px; -fx-text-fill: #6a9060; -fx-font-weight: bold; }
+.player-name-label  { -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #c0d8b0; }
+.player-name-active { -fx-text-fill: #90e060; -fx-effect: dropshadow(gaussian,#90e06060,6,0.4,0,0); }
+.label              { -fx-text-fill: #d4e8c8; -fx-font-size: 12px; }
+
+/* ── Table ──────────────────────────────────────────────────────── */
+.player-zone {
+    -fx-background-color: rgba(0,0,0,0.18);
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(100,160,80,0.22);
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-padding: 8px;
+}
+.player-zone-active {
+    -fx-background-color: rgba(30,80,20,0.30);
+    -fx-border-color: rgba(120,200,80,0.55);
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(gaussian,#60c04050,16,0.4,0,0);
+}
+.deck-pile {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #1a3a8a, #0f2060);
+    -fx-background-radius: 8px;
+    -fx-border-color: #3a60c0;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-effect: dropshadow(gaussian,#000000cc,10,0.5,3,5);
+    -fx-cursor: hand;
+    -fx-min-width: 72px; -fx-max-width: 72px;
+    -fx-min-height: 100px;
+    -fx-alignment: center;
+}
+.deck-pile:hover { -fx-border-color: #60a0f0; }
+.deck-count { -fx-font-size: 11px; -fx-text-fill: #90c0f0; -fx-font-weight: bold; }
+.discard-zone {
+    -fx-background-color: rgba(0,0,0,0.30);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(120,100,60,0.40);
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-min-width: 72px; -fx-max-width: 72px;
+    -fx-min-height: 100px;
+    -fx-alignment: center;
+}
+
+/* ── Cards (pretty face-up) ─────────────────────────────────────── */
+.card {
+    -fx-background-color: #f8f4ec;
+    -fx-background-radius: 8px;
+    -fx-border-color: #c8b890;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-effect: dropshadow(gaussian,#000000aa,8,0.4,2,3);
+    -fx-cursor: hand;
+    -fx-padding: 0 0 5 0;
+    -fx-min-width: 95px; -fx-max-width: 110px;
+    -fx-min-height: 78px;
+}
+.card:hover {
+    -fx-background-color: #fffcf5;
+    -fx-border-color: #f5d060;
+    -fx-effect: dropshadow(gaussian,#f5d06080,14,0.5,0,-3);
+    -fx-translate-y: -4px;
+}
+.card-selected {
+    -fx-border-color: #f5a020;
+    -fx-border-width: 2.5px;
+    -fx-background-color: #fffbe8;
+    -fx-effect: dropshadow(gaussian,#f5a02090,16,0.6,0,-4);
+    -fx-translate-y: -6px;
+}
+/* Header strip per type */
+.card-header        { -fx-padding: 4 6 4 6; -fx-background-radius: 7px 7px 0 0; }
+.card-header-play   { -fx-background-color: linear-gradient(to right, #4a8a3a, #6ab84a); }
+.card-header-helper { -fx-background-color: linear-gradient(to right, #2a5a8a, #4a88c8); }
+.card-header-weapon { -fx-background-color: linear-gradient(to right, #6a2a8a, #9a4ac8); }
+.card-header-alert  { -fx-background-color: linear-gradient(to right, #8a2a1a, #c84a2a); }
+.card-header-rolling{ -fx-background-color: linear-gradient(to right, #8a1a6a, #c83a9a); }
+
+.card-body    { -fx-padding: 4 6 4 6; }
+.card-name    { -fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #1a1208; -fx-wrap-text: true; }
+.card-desc    { -fx-font-size: 8px;  -fx-text-fill: #5a4a30; -fx-wrap-text: true; }
+.card-badge   { -fx-font-size: 7px;  -fx-text-fill: #ffffff; -fx-font-weight: bold; }
+.card-hours   { -fx-font-size: 9px;  -fx-text-fill: #8a3a08; -fx-font-weight: bold; }
+.card-exp     { -fx-font-size: 8px;  -fx-text-fill: #7a6040; }
+.card-exp-urgent { -fx-font-size: 8px; -fx-text-fill: #cc2010; -fx-font-weight: bold; }
+
+/* Played card variant */
+.played-card {
+    -fx-min-width: 105px; -fx-max-width: 125px;
+    -fx-min-height: 85px;
+    -fx-effect: dropshadow(gaussian,#000000cc,6,0.5,3,4);
+    -fx-cursor: hand;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+}
+
+/* Face-down */
+.card-facedown {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #1a3a8a, #0f2060);
+    -fx-background-radius: 8px;
+    -fx-border-color: #2a50b0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-effect: dropshadow(gaussian,#000000bb,5,0.4,1,2);
+    -fx-min-width: 42px; -fx-max-width: 48px;
+    -fx-min-height: 62px;
+}
+
+/* View-only card (dimmed when not your turn) */
+.card-viewonly {
+    -fx-opacity: 0.80;
+    -fx-cursor: default;
+}
+.card-viewonly:hover {
+    -fx-translate-y: -2px;
+    -fx-border-color: #c8b890;
+    -fx-opacity: 1.0;
+}
+
+/* ── Log ────────────────────────────────────────────────────────── */
+.log-panel {
+    -fx-background-color: rgba(5,12,6,0.92);
+    -fx-border-color: rgba(60,120,40,0.35);
+    -fx-border-width: 0 0 0 1px;
+    -fx-padding: 8px;
+}
+.log-area {
+    -fx-control-inner-background: transparent;
+    -fx-text-fill: #70a860;
+    -fx-font-size: 10px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-highlight-fill: #3a6030;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────── */
+.btn {
+    -fx-background-color: rgba(20,50,15,0.90);
+    -fx-text-fill: #90d060;
+    -fx-border-color: rgba(80,160,50,0.60);
+    -fx-border-width: 1px;
+    -fx-background-radius: 3px; -fx-border-radius: 3px;
+    -fx-cursor: hand; -fx-font-size: 11px;
+    -fx-padding: 5 10 5 10;
+}
+.btn:hover   { -fx-background-color: rgba(30,80,20,0.95); -fx-border-color: #60b040; -fx-text-fill: #b0f070; }
+.btn:pressed { -fx-background-color: rgba(15,40,10,1.0); }
+.btn:disabled { -fx-opacity: 0.35; }
+.btn-primary { -fx-background-color: rgba(30,80,15,0.95); -fx-border-color: rgba(100,200,50,0.80); -fx-text-fill: #c0f080; -fx-font-weight: bold; }
+.btn-primary:hover { -fx-background-color: rgba(40,110,20,1.0); -fx-border-color: #90e040; }
+.btn-danger  { -fx-background-color: rgba(60,15,10,0.90); -fx-border-color: rgba(180,60,40,0.70); -fx-text-fill: #f08070; }
+.btn-danger:hover  { -fx-border-color: #e05030; -fx-text-fill: #ff9080; }
+.btn-weapon  { -fx-background-color: rgba(50,15,60,0.90); -fx-border-color: rgba(150,50,180,0.70); -fx-text-fill: #d080e8; }
+.btn-weapon:hover  { -fx-border-color: #c060e0; -fx-text-fill: #f0a0ff; }
+.btn-skip    { -fx-background-color: rgba(20,20,20,0.80); -fx-border-color: rgba(80,80,80,0.50); -fx-text-fill: #707070; }
+.btn-skip:hover    { -fx-text-fill: #a0a0a0; }
+.btn-endturn { -fx-background-color: rgba(60,40,10,0.90); -fx-border-color: rgba(180,140,40,0.70); -fx-text-fill: #f0c060; -fx-font-weight: bold; }
+.btn-endturn:hover { -fx-background-color: rgba(80,60,15,0.95); -fx-border-color: #d0a030; }
+
+/* ── Hand tray ──────────────────────────────────────────────────── */
+.hand-tray {
+    -fx-background-color: rgba(5,18,8,0.90);
+    -fx-border-color: rgba(80,140,60,0.40);
+    -fx-border-width: 1px 0 0 0;
+    -fx-padding: 8 14 10 14;
+}
+.hand-tray-viewonly {
+    -fx-background-color: rgba(5,10,18,0.90);
+    -fx-border-color: rgba(60,80,140,0.40);
+    -fx-border-width: 1px 0 0 0;
+    -fx-padding: 8 14 10 14;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────────── */
+.scroll-bar { -fx-background-color: transparent; }
+.scroll-bar .thumb { -fx-background-color: rgba(80,140,50,0.40); -fx-background-radius: 0; }
+.scroll-bar .thumb:hover { -fx-background-color: rgba(100,180,60,0.60); }
+.scroll-bar .track { -fx-background-color: rgba(0,0,0,0.20); }
+.scroll-bar .increment-button, .scroll-bar .decrement-button { -fx-background-color: transparent; }
+
+/* ── Tooltip ────────────────────────────────────────────────────── */
+.tooltip {
+    -fx-background-color: #060e08; -fx-text-fill: #c0d8a8;
+    -fx-border-color: #3a6030; -fx-border-width: 1px;
+    -fx-font-size: 10px; -fx-wrap-text: true; -fx-max-width: 240px;
+}
+
+/* ── Setup ──────────────────────────────────────────────────────── */
+.setup-root { -fx-padding: 40px; }
+.setup-title   { -fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #f5d060; -fx-effect: dropshadow(gaussian,#f5d06090,18,0.5,0,2); }
+.setup-subtitle { -fx-font-size: 13px; -fx-text-fill: #507040; }
+.setup-field {
+    -fx-control-inner-background: rgba(10,30,12,0.90);
+    -fx-text-fill: #c0e0a0;
+    -fx-border-color: rgba(80,140,50,0.50);
+    -fx-border-width: 1px;
+    -fx-background-radius: 3px; -fx-border-radius: 3px;
+    -fx-font-size: 12px; -fx-padding: 5 8 5 8;
+    -fx-pref-width: 200px;
+}
+.setup-field:focused { -fx-border-color: rgba(120,210,70,0.80); }
+.setup-spinner .text-field {
+    -fx-control-inner-background: rgba(10,30,12,0.90);
+    -fx-text-fill: #c0e0a0;
+}
+
+/* ── Game over ──────────────────────────────────────────────────── */
+.gameover-title { -fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: #f5d060; -fx-effect: dropshadow(gaussian,#f5d06080,12,0.5,0,0); }
+.score-row { -fx-background-color: rgba(10,30,12,0.80); -fx-border-color: rgba(60,120,40,0.40); -fx-border-width: 0 0 1px 0; -fx-padding: 8 40 8 40; }
+.score-winner { -fx-background-color: rgba(30,80,15,0.90); -fx-border-color: rgba(120,210,60,0.80); -fx-border-width: 2px; }
+
+/* ── Separator ──────────────────────────────────────────────────── */
+.separator .line { -fx-border-color: rgba(80,140,50,0.30); }

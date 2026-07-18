@@ -1,1 +1,8 @@
-rootProject.name = "Procrastination"
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'workgame'
