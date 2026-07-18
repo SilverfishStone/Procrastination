@@ -106,7 +106,7 @@
   .zone-title .meta{color:var(--text-dim); font-size:10.5px; letter-spacing:1px;}
   .zone.active-turn{border-color:var(--brass-dk); box-shadow:0 0 0 1px rgba(217,168,63,.35), 0 4px 14px rgba(0,0,0,.25);}
 
-  .opp-row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .opp-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(380px,1fr)); gap:14px;}
   @media (max-width:760px){ .opp-row{grid-template-columns:1fr;} }
 
   .desk-slots{display:flex; gap:10px; flex-wrap:wrap; min-height:150px;}
@@ -286,11 +286,18 @@
   .settings-note{font-size:10.5px; color:var(--text-dim); margin:8px 0 0;}
   .settings-summary{padding:10px 11px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--text-dim); font-size:11px;}
   .settings-summary b{color:var(--text);}
+  .stats-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0 16px;}
+  .stat-card{padding:14px 12px; border:1px solid var(--line); border-radius:9px; background:var(--panel);}
+  .stat-card.wide{grid-column:1/-1;}
+  .stat-value{font-family:var(--mono); font-size:22px; font-weight:700; color:var(--brass); line-height:1.1;}
+  .stat-label{font-size:10.5px; color:var(--text-dim); margin-top:4px;}
   input:disabled{opacity:.55; cursor:not-allowed;}
   @media (max-width:520px){
     .save-create{grid-template-columns:1fr;}
     .save-row{align-items:flex-start; flex-direction:column;}
     .theme-grid{grid-template-columns:1fr;}
+    .stats-grid{grid-template-columns:1fr;}
+    .stat-card.wide{grid-column:auto;}
     .sub-settings{grid-template-columns:1fr;}
     .setting-row{flex-direction:column;}
   }
@@ -348,20 +355,20 @@
         <ol>
           <li><b>A turn</b> is: your cards age one round, then you either <b>skip</b>, or <b>draw and take exactly one action</b> — play one card, use one card, or discard one card (from hand or desk).</li>
           <li><b>Hand-discard costs are configurable per game.</b> When enabled, any printed up-front negative value triggers when the card leaves the hand; cards without a printed hour value do nothing.</li>
-          <li><b>A drawn Alert</b> resolves immediately and uses up the turn. Fired! and Recession discard affected desk cards using normal settlement and reset rules. Per-game settings decide whether attached helpers can protect their cards from Alerts.</li>
+          <li><b>A drawn Alert</b> resolves immediately and uses up the turn. <b>Fired!</b> discards your desk at base value only: stored positive hours are lost, while printed negative values and Parasite's full 4h apply. <b>Recession</b> uses its normal settlement and reset rules. Per-game settings decide whether attached helpers can protect their cards from Alerts.</li>
           <li><b>Negative cards</b> (Risky, Stock Market, Downsizing): the full cost is paid the moment the card enters play. One hour returns to you each round until repaid, then the card earns from the pile. Discarding while hours are still owed forfeits them. <b>Expiring</b> loses everything on the card <i>and</i> charges the base cost again.</li>
           <li><b>Risky</b> jumps to a total of +8 on its 8th round (per its card text), then expires on the 9th.</li>
           <li><b>Professional</b> pays +10 only when discarded on round 8 or later, up to its (possibly extended) deadline. Expiring pays nothing.</li>
           <li><b>Tardy</b> ages the target card one round with no earnings — it can force an immediate expiration.</li>
-          <li><b>Parasite</b> moves 1 hour per round from its holder to its attacker, 4 hours total. A normal early discard pays the remaining balance. If Parasite expires or an Alert force-discards it, it resets and pays the attacker the full 4h.</li>
-          <li><b>Quit</b>: the attacker picks a visible played card, or "hand" (random card). A played card discarded by Quit is voided. A player who loses a hand card refills toward the game’s configured hand size.</li>
+          <li><b>Parasite</b> moves 1 hour per round from its holder to its attacker, 4 hours total. Discarding on or before its deadline pays only the balance still showing on it; an immediate discard therefore pays all 4h. If it expires, or remains past its deadline and is later discarded, it resets and pays the attacker the full 4h.</li>
+          <li><b>Quit</b>: the attacker picks a visible played card, or "hand" (random card). The game setting decides whether a played card forced out by Quit settles normally or loses its stored hours. A player who loses a hand card refills toward the game’s configured hand size.</li>
           <li><b>Foreign Exchange</b> swaps one random hand card from each side.</li>
           <li><b>Helper timing is configurable per game.</b> Helpers can either be free at any time or restricted to your own turn as its action. Excused can remove an unprotected weapon already in play.</li>
-          <li><b>Making room</b>: if a play-weapon lands on a full desk, you discard one of your own cards <i>normally</i> (banking rules apply — this one isn't voided).</li>
-          <li>While a <b>weapon sits on your desk</b>, your unprotected non-weapon cards neither earn nor recover owed hours. They still age and can expire. A card protected by <b>Extension or Nepotism</b> overrides this freeze.</li>
+          <li><b>Making room</b>: if a play-weapon lands on a full desk, you discard one of your own cards. The forced-discard banking setting decides whether stored hours settle normally or are lost.</li>
+          <li>While a <b>weapon sits on your desk</b>, your unprotected non-weapon cards neither earn nor recover owed hours. They still age and can expire. Only <b>Nepotism</b> overrides this freeze.</li>
           <li><b>Performance Review</b>: your hand is discarded under the game’s hand-discard rule, then you redraw toward the configured hand size.</li>
           <li><b>Amnesia</b> rebuilds every card in play as freshly played: earned hours return to the pile, attachments (Extension, Nepotism) are removed, and negative cards re-charge whatever you had recovered.</li>
-          <li><b>Extension</b> adds 5 rounds and blocks weapons from affecting its protected card. <b>Nepotism</b> also blocks weapons and stops normal expiry. Only Alerts bypass helpers.</li>
+          <li><b>Extension</b> only adds 5 rounds to a card’s deadline; it does not stop Tardy, Deadline, Quit, desk-weapon freezing, or other instant weapon effects. <b>Nepotism</b> blocks weapons and stops normal expiry. The Alert-protection setting can separately allow attached helpers to block Alerts.</li>
           <li><b>Sharing is Caring</b> earns whenever its linked player's cards earn from the pile. It voids (hours lost) the moment any card of yours or theirs expires.</li>
           <li><b>Hour totals can go negative</b> (tracked as debt, per rules Example 3). Scammer can't steal from a player at 0 or below.</li>
           <li><b>Game end is configurable:</b> a round limit, a goal-hour threshold, or a finite deck. Cards still in play settle as if discarded when the game ends.</li>
@@ -390,11 +397,11 @@ const DEFS = {
   parasite:{t:'weapon',sub:'play',name:'Parasite',txt:'Holder pays you 1 hour per round, 4 total. Expires after 5 rounds.',life:5,w:5},
   foreignExchange:{t:'weapon',sub:'imm',name:'Foreign Exchange',txt:'Swap one random hand card with another player.',w:4},
   excused:{t:'helper',name:'Excused',txt:'Cancel an incoming weapon for free, or use it to discard an unprotected weapon already on your desk. Never cancels Alerts.',w:6},
-  extension:{t:'helper',name:'Extension',txt:'Delay a card\u2019s expiration by 5 rounds and protect it from weapons. Alerts bypass it.',w:4},
+  extension:{t:'helper',name:'Extension',txt:'Delay a card\u2019s normal expiration by 5 rounds. It does not block weapons or instant expiration.',w:4},
   nepotism:{t:'helper',name:'Nepotism',txt:'Protect a card from weapons and normal expiry. Alerts bypass it. It stops earning past its deadline.',w:3},
   newbie:{t:'helper',name:'Newbie',txt:'Dead hand: discard your hand (card costs still apply) and draw 5 new cards.',w:3},
   amnesia:{t:'alert',name:'Amnesia',txt:'Every card in play resets to freshly played.',w:1},
-  fired:{t:'alert',name:'Fired!',txt:'Immediately discard all cards on your desk. Printed up-front hour values trigger again.',w:1},
+  fired:{t:'alert',name:'Fired!',txt:'Immediately discard all cards on your desk at base value. Stored positive hours are lost.',w:1},
   performanceReview:{t:'alert',name:'Performance Review',txt:'Discard your whole hand — card costs are charged, nothing else triggers — then redraw 5.',w:1},
   recession:{t:'alert',name:'Recession',txt:'Immediately discard every desk card. Printed up-front hour values trigger again.',w:1},
 };
@@ -412,6 +419,7 @@ const SAVE_LIST_KEY = 'clockedInNamedSavesV2';
 const LEGACY_SAVE_KEY = 'clockedInSaveV1';
 const SETTINGS_KEY = 'clockedInSettingsV2';
 const LEGACY_SETTINGS_KEY = 'clockedInSettingsV1';
+const STATS_KEY = 'clockedInLifetimeStatsV1';
 const THEMES = {
   classic:{name:'Classic Desk', note:'Original charcoal and manila'},
   midnight:{name:'Midnight Blue', note:'Cool navy and steel'},
@@ -423,10 +431,12 @@ const DEFAULT_GAME_RULES = Object.freeze({
   helpersBlockAlerts:false,
   helpersAnyTime:true,
   startingHandSize:5,
+  opponentCount:2,
   endType:'rounds',
-  roundCount:15,
+  roundCount:40,
   goalHours:50,
   deckSize:60,
+  bankForcedWeaponDiscards:true,
   notifyEvents:true
 });
 function clampInt(value, min, max, fallback){
@@ -436,16 +446,20 @@ function clampInt(value, min, max, fallback){
 function normalizeRules(value){
   const v = value || {};
   const hand = clampInt(v.startingHandSize,1,10,DEFAULT_GAME_RULES.startingHandSize);
+  const opponentCount = clampInt(v.opponentCount,1,5,DEFAULT_GAME_RULES.opponentCount);
+  const minimumDeck = hand * (opponentCount + 1);
   const endType = ['rounds','goal','deck'].includes(v.endType) ? v.endType : DEFAULT_GAME_RULES.endType;
   return {
     discardNegativeFromHand:v.discardNegativeFromHand!==false,
     helpersBlockAlerts:!!v.helpersBlockAlerts,
     helpersAnyTime:v.helpersAnyTime!==false,
     startingHandSize:hand,
+    opponentCount,
     endType,
     roundCount:clampInt(v.roundCount,1,100,DEFAULT_GAME_RULES.roundCount),
     goalHours:clampInt(v.goalHours,1,999,DEFAULT_GAME_RULES.goalHours),
-    deckSize:clampInt(v.deckSize,hand*3,500,Math.max(DEFAULT_GAME_RULES.deckSize,hand*3)),
+    deckSize:clampInt(v.deckSize,minimumDeck,500,Math.max(DEFAULT_GAME_RULES.deckSize,minimumDeck)),
+    bankForcedWeaponDiscards:v.bankForcedWeaponDiscards!==false,
     notifyEvents:v.notifyEvents!==false
   };
 }
@@ -490,12 +504,22 @@ function makeCard(key){
           link:null, attacker:null, transfers:0};
 }
 const lifespan = c => DEFS[c.key].life + c.ext*5;
+function parasitePayout(c, resetValue){
+  if (!c || c.key!=='parasite') return 0;
+  if (resetValue || c.age > lifespan(c)) return 4;
+  return Math.max(0,4-(Number(c.transfers)||0));
+}
 const hasAttachedHelper = c => !!(c && (c.nepo || c.ext));
 
 /* ================= State ================= */
 var state = null;
+const OPPONENT_NAMES = ['Dana','Marcus','Priya','Leo','Carmen'];
 function newState(ruleInput){
   const rules=normalizeRules(ruleInput);
+  const players=[{id:0, name:'You', isHuman:true, hours:10, hand:[], tab:[], refill:false}];
+  for (let i=0;i<rules.opponentCount;i++){
+    players.push({id:i+1, name:OPPONENT_NAMES[i], isHuman:false, hours:10, hand:[], tab:[], refill:false});
+  }
   const stateObj={
     rules,
     maxRounds:rules.roundCount,
@@ -503,11 +527,9 @@ function newState(ruleInput){
     phase:'idle',
     discard:[],
     deck:null,
-    players:[
-      {id:0, name:'You',    isHuman:true,  hours:10, hand:[], tab:[], refill:false},
-      {id:1, name:'Dana',   isHuman:false, hours:10, hand:[], tab:[], refill:false},
-      {id:2, name:'Marcus', isHuman:false, hours:10, hand:[], tab:[], refill:false},
-    ],
+    players,
+    metrics:{boardSum:0,totalSum:0,samples:0,lastSignature:''},
+    statsRecorded:false,
   };
   if (rules.endType==='deck'){
     stateObj.deck=buildDeck(rules.deckSize,rules.startingHandSize*stateObj.players.length);
@@ -516,10 +538,20 @@ function newState(ruleInput){
 }
 function hydrateState(saved){
   const restored=saved || {};
-  restored.rules=normalizeRules(restored.rules || {roundCount:restored.maxRounds || 15});
+  const savedRules=restored.rules || {roundCount:restored.maxRounds || DEFAULT_GAME_RULES.roundCount};
+  const inferredOpponents=Array.isArray(restored.players) ? Math.max(1,Math.min(5,restored.players.length-1)) : DEFAULT_GAME_RULES.opponentCount;
+  restored.rules=normalizeRules({...savedRules, opponentCount:savedRules.opponentCount || inferredOpponents});
   restored.maxRounds=restored.rules.roundCount;
   restored.finishing=false;
   restored.justDrawn=restored.justDrawn || null;
+  const metricSource=restored.metrics || {};
+  restored.metrics={
+    boardSum:Number(metricSource.boardSum)||0,
+    totalSum:Number(metricSource.totalSum)||0,
+    samples:Number(metricSource.samples)||0,
+    lastSignature:String(metricSource.lastSignature||'')
+  };
+  restored.statsRecorded=!!restored.statsRecorded;
   if (restored.rules.endType==='deck' && !Array.isArray(restored.deck)) restored.deck=[];
   return restored;
 }
@@ -530,7 +562,7 @@ function safeSavePoint(){
   return !!(state && !state.over && cur().isHuman && (state.phase==='turnStart' || state.phase==='action'));
 }
 function validSave(save){
-  return !!(save && (save.version===1 || save.version===2) && save.state && Array.isArray(save.state.players) && save.state.players.length===3);
+  return !!(save && (save.version===1 || save.version===2) && save.state && Array.isArray(save.state.players) && save.state.players.length>=2 && save.state.players.length<=6);
 }
 function writeSaveList(saves){
   try {
@@ -620,16 +652,22 @@ function readSettings(){
       if (raw) localStorage.removeItem(LEGACY_SETTINGS_KEY);
     }
     const value = JSON.parse(raw || '{}');
-    return {
+    let defaultsInput=value.gameDefaults || {};
+    if (!value.defaultsVersion && Number(defaultsInput.roundCount)===15){
+      defaultsInput={...defaultsInput,roundCount:DEFAULT_GAME_RULES.roundCount};
+    }
+    const result={
       theme:THEMES[value.theme] ? value.theme : 'classic',
-      gameDefaults:normalizeRules(value.gameDefaults)
+      gameDefaults:normalizeRules(defaultsInput)
     };
+    if (!value.defaultsVersion) writeSettings({...result,defaultsVersion:2});
+    return result;
   } catch (err) {
     return {theme:'classic',gameDefaults:normalizeRules()};
   }
 }
 function writeSettings(next){
-  try { localStorage.setItem(SETTINGS_KEY,JSON.stringify(next)); return true; }
+  try { localStorage.setItem(SETTINGS_KEY,JSON.stringify({...next,defaultsVersion:2})); return true; }
   catch(err){ return false; }
 }
 function applyTheme(theme){
@@ -644,6 +682,74 @@ function saveGameDefaults(rules){
   return writeSettings({theme:current.theme,gameDefaults:normalizeRules(rules)});
 }
 applyTheme(readSettings().theme);
+
+/* ================= Lifetime statistics ================= */
+function emptyLifetimeStats(){
+  return {gamesPlayed:0,wins:0,losses:0,boardSum:0,totalSum:0,samples:0};
+}
+function readLifetimeStats(){
+  try {
+    const raw=JSON.parse(localStorage.getItem(STATS_KEY)||'{}');
+    return {
+      gamesPlayed:Math.max(0,Number(raw.gamesPlayed)||0),
+      wins:Math.max(0,Number(raw.wins)||0),
+      losses:Math.max(0,Number(raw.losses)||0),
+      boardSum:Number(raw.boardSum)||0,
+      totalSum:Number(raw.totalSum)||0,
+      samples:Math.max(0,Number(raw.samples)||0)
+    };
+  } catch(err){ return emptyLifetimeStats(); }
+}
+function writeLifetimeStats(stats){
+  try { localStorage.setItem(STATS_KEY,JSON.stringify(stats)); return true; }
+  catch(err){ return false; }
+}
+function cardHoursInPlay(c){
+  if (c.key==='parasite') return -parasitePayout(c,false);
+  if (c.owed>0) return -c.owed;
+  return Number(c.tokens)||0;
+}
+function statsSignature(){
+  if (!state) return '';
+  return JSON.stringify({
+    r:state.round,t:state.turnIdx,
+    p:state.players.map(p=>({
+      h:p.hours,
+      tab:p.tab.map(c=>[c.uid,c.age,c.tokens,c.owed,c.transfers,c.ext,c.nepo])
+    }))
+  });
+}
+function captureGameSnapshot(){
+  if (!state || state.over || state.finishing) return;
+  if (!state.metrics) state.metrics={boardSum:0,totalSum:0,samples:0,lastSignature:''};
+  const signature=statsSignature();
+  if (signature===state.metrics.lastSignature) return;
+  let board=0;
+  let stashes=0;
+  for (const p of state.players){
+    stashes += Number(p.hours)||0;
+    for (const c of p.tab) board += cardHoursInPlay(c);
+  }
+  state.metrics.boardSum += board;
+  state.metrics.totalSum += board + stashes;
+  state.metrics.samples++;
+  state.metrics.lastSignature=signature;
+}
+function recordCompletedGame(humanWon){
+  if (!state || state.statsRecorded) return;
+  const metrics=state.metrics || {boardSum:0,totalSum:0,samples:0};
+  const stats=readLifetimeStats();
+  stats.gamesPlayed++;
+  if (humanWon) stats.wins++; else stats.losses++;
+  stats.boardSum += Number(metrics.boardSum)||0;
+  stats.totalSum += Number(metrics.totalSum)||0;
+  stats.samples += Number(metrics.samples)||0;
+  writeLifetimeStats(stats);
+  state.statsRecorded=true;
+}
+function formatAverage(value){
+  return Number.isFinite(value) ? value.toFixed(1).replace(/\.0$/,'') : '0';
+}
 
 /* ================= Log ================= */
 function log(msg, cls){
@@ -688,6 +794,13 @@ function notify(title, body){
 
 /* ================= Rendering ================= */
 function chipRow(c){
+  if (c.key==='parasite'){
+    const amount=parasitePayout(c,false);
+    let h='<span class="chips">';
+    for (let i=0;i<Math.min(amount,5);i++) h += '<span class="chip neg"></span>';
+    h += '</span><span class="chip-count neg">→'+amount+'h</span>';
+    return h;
+  }
   if (c.owed > 0){
     const n = Math.min(c.owed, 5);
     let h = '<span class="chips">';
@@ -755,7 +868,7 @@ function render(){
   for (const p of state.players.slice(1)){
     const supp = p.tab.some(c=>DEFS[c.key].t==='weapon');
     let slots = '';
-    for (const c of p.tab) slots += cardHTMLv(c,{inPlay:true, sm:true, suppressed:supp && DEFS[c.key].t!=='weapon' && !c.nepo && !c.ext});
+    for (const c of p.tab) slots += cardHTMLv(c,{inPlay:true, sm:true, suppressed:supp && DEFS[c.key].t!=='weapon' && !c.nepo});
     for (let i=p.tab.length;i<3;i++) slots += '<div class="slot-empty" style="width:112px;min-height:132px">EMPTY</div>';
     let hidden = '<div class="hidden-hand">';
     for (let i=0;i<p.hand.length;i++) hidden += '<span class="hidden-card"></span>';
@@ -775,7 +888,7 @@ function render(){
   let dh = '';
   const normalAction = state.phase==='action' && cur()===p0;
   for (const c of p0.tab)
-    dh += cardHTMLv(c,{inPlay:true, click:normalAction, attr:'data-tab="'+c.uid+'"', suppressed:supp0 && DEFS[c.key].t!=='weapon' && !c.nepo && !c.ext});
+    dh += cardHTMLv(c,{inPlay:true, click:normalAction, attr:'data-tab="'+c.uid+'"', suppressed:supp0 && DEFS[c.key].t!=='weapon' && !c.nepo});
   for (let i=p0.tab.length;i<3;i++) dh += '<div class="slot-empty">EMPTY SLOT</div>';
   $('myDesk').innerHTML = dh;
 
@@ -801,6 +914,7 @@ function render(){
   else if (state.phase==='turnStart') $('hint').innerHTML = 'Your turn: '+B('draw a card')+' (then take one action) or '+B('skip')+'.';
   else if (noDrawAction) $('hint').innerHTML = 'The draw pile is empty. Play or discard '+B('one card')+', or skip.';
   else if (state.phase==='action') $('hint').innerHTML = 'Take '+B('one action')+': click a hand card to play/use/toss it, or click a desk card to discard &amp; settle it.';
+  captureGameSnapshot();
 }
 
 /* ================= Core mechanics ================= */
@@ -812,7 +926,7 @@ function gain(p, c, n, depth){
     for (const q of state.players){
       const qSupp = q.tab.some(x=>DEFS[x.key].t==='weapon');
       for (const s of q.tab){
-        if (s.key==='sharing' && s.link===p.id && (!qSupp || s.nepo || s.ext) && s.age <= lifespan(s)){
+        if (s.key==='sharing' && s.link===p.id && (!qSupp || s.nepo) && s.age <= lifespan(s)){
           gain(q, s, n, 1);
           log(B(q.name)+"'s Sharing is Caring earns +"+n+"h (following "+p.name+").", 'good');
         }
@@ -861,7 +975,7 @@ async function settleDiscard(p, c, how, voided, resetValue){
   if (voided){
     log(B(p.name)+"'s "+B(d.name)+' is voided'+(c.tokens?(' — '+c.tokens+'h lost'):'')+' ('+how+').', 'bad');
   } else if (c.key==='parasite' && c.attacker!==null){
-    const amount = resetValue ? 4 : Math.max(0, 4 - c.transfers);
+    const amount = parasitePayout(c,resetValue);
     if (amount>0){
       p.hours -= amount;
       byId(c.attacker).hours += amount;
@@ -882,6 +996,29 @@ async function settleDiscard(p, c, how, voided, resetValue){
     log(B(d.name)+' resets to its printed value, charging '+B(p.name)+' '+B('−'+d.neg+'h')+'.', 'bad');
   }
   c.tokens = 0;
+  render();
+}
+/* Alert-only base-value discard: no accumulated positive hours can be banked. */
+async function settleAtBaseValue(p, c, how){
+  if (!p.tab.includes(c)) return;
+  p.tab.splice(p.tab.indexOf(c),1);
+  state.discard.push(DEFS[c.key].name);
+  const d=DEFS[c.key];
+  const lost=c.tokens;
+  let msg=B(p.name)+' immediately discards '+B(d.name)+' at base value ('+how+')';
+  if (lost>0) msg+=' — '+lost+'h stored on it are lost';
+  if (c.key==='parasite' && c.attacker!==null){
+    p.hours-=4;
+    byId(c.attacker).hours+=4;
+    msg+=' and pays '+byId(c.attacker).name+' the full 4h';
+  } else if (d.neg){
+    p.hours-=d.neg;
+    msg+=' and '+p.name+' pays '+d.neg+'h';
+  } else {
+    msg+=' — its base value is 0h';
+  }
+  c.tokens=0;
+  log(msg+'.', d.neg || c.key==='parasite' || lost>0 ? 'bad' : '');
   render();
 }
 /* Excused reaction. Returns true if blocked. */
@@ -925,20 +1062,23 @@ async function receivePlayWeapon(target, c, attacker){
   const blocked = await tryExcused(target, d.name, attacker);
   if (blocked){ state.discard.push(d.name); return; }
   if (target.tab.length >= 3){
+    const canBank=gameRules().bankForcedWeaponDiscards;
     let victim;
     if (target.isHuman){
       const v = await modal({
         title:'Make room on your desk',
-        body:B(d.name)+' must be placed on your desk, which is full. Choose one of your cards to discard (normal banking applies).',
+        body:B(d.name)+' must be placed on your desk, which is full. Choose one of your cards to discard. '+(canBank?'Normal settlement applies.':'Stored hours are lost under this game’s forced-discard setting.'),
         choices: target.tab.map(x=>({
           label:DEFS[x.key].name,
-          sub:(x.owed>0 ? 'still owes '+x.owed+'h — forfeited if discarded' : 'banks '+bankPreview(x)+'h'),
+          sub:canBank
+            ? (x.owed>0 ? 'still owes '+x.owed+'h — forfeited if discarded' : (x.key==='parasite'?'pays '+parasitePayout(x,false)+'h to its attacker':'banks '+bankPreview(x)+'h'))
+            : 'forced out with no banking',
           value:x.uid}))});
       victim = target.tab.find(x=>x.uid===v);
     } else {
       victim = target.tab.slice().sort((a,b)=>bankPreview(a)-bankPreview(b))[0];
     }
-    await settleDiscard(target, victim, 'making room for '+d.name);
+    await settleDiscard(target, victim, 'making room for '+d.name, !canBank);
   }
   if (d.neg){ target.hours -= d.neg; c.owed = d.neg; }
   if (c.key==='parasite') c.attacker = attacker ? attacker.id : null;
@@ -951,7 +1091,7 @@ function bankPreview(c){
   if (c.owed>0) return -c.owed;
   let v = c.tokens;
   if (c.key==='professional' && c.age>=8 && c.age<=lifespan(c)) v += 10;
-  if (c.key==='parasite') v = -(Math.max(0,4-c.transfers));
+  if (c.key==='parasite') v = -parasitePayout(c,false);
   return v;
 }
 
@@ -966,7 +1106,7 @@ async function agingPhase(p){
     const d = DEFS[c.key];
     const isW = d.t==='weapon';
     const withinDeadline = c.age <= lifespan(c);
-    if (withinDeadline && (isW || !suppressed || c.nepo || c.ext)){
+    if (withinDeadline && (isW || !suppressed || c.nepo)){
       if (c.owed > 0){
         c.owed--; p.hours++;
         parts.push(d.name+' returns 1h ('+(c.owed?('−'+c.owed+' left'):'paid off')+')');
@@ -1003,18 +1143,17 @@ async function agingPhase(p){
     }
   }
   if (parts.length) log(B(p.name)+"'s desk: "+parts.join(' · ')+'.');
-  if (suppressed && p.tab.some(x=>DEFS[x.key].t!=='weapon' && !x.nepo && !x.ext))
+  if (suppressed && p.tab.some(x=>DEFS[x.key].t!=='weapon' && !x.nepo))
     log(B(p.name)+"'s unprotected non-weapon cards are frozen by a weapon on the desk.");
   render();
 }
 
 /* ================= Immediate weapons ================= */
 async function execTardy(actor, owner, card){
-  if (card.nepo || card.ext){
+  if (card.nepo){
     state.discard.push('Tardy');
-    const helper = card.nepo ? 'Nepotism' : 'Extension';
-    log(B(owner.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B(helper)+' — Tardy has no effect.', 'good');
-    await weaponNotice(owner,'Tardy',actor,helper+' blocked it.');
+    log(B(owner.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B('Nepotism')+' — Tardy has no effect.', 'good');
+    await weaponNotice(owner,'Tardy',actor,'Nepotism blocked it.');
     render();
     return;
   }
@@ -1026,11 +1165,10 @@ async function execTardy(actor, owner, card){
   render();
 }
 async function execDeadline(actor, owner, card){
-  if (card.nepo || card.ext){
+  if (card.nepo){
     state.discard.push('Deadline');
-    const helper = card.nepo ? 'Nepotism' : 'Extension';
-    log(B(owner.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B(helper)+' — Deadline has no effect.', 'good');
-    await weaponNotice(owner,'Deadline',actor,helper+' blocked it.');
+    log(B(owner.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B('Nepotism')+' — Deadline has no effect.', 'good');
+    await weaponNotice(owner,'Deadline',actor,'Nepotism blocked it.');
     render();
     return;
   }
@@ -1049,11 +1187,10 @@ async function execScammer(actor, target){
   render();
 }
 async function execQuit(actor, target, zone, card){
-  if (zone==='tab' && card && (card.nepo || card.ext)){
+  if (zone==='tab' && card && card.nepo){
     state.discard.push('Quit');
-    const helper = card.nepo ? 'Nepotism' : 'Extension';
-    log(B(target.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B(helper)+' — Quit has no effect.', 'good');
-    await weaponNotice(target,'Quit',actor,helper+' blocked it.');
+    log(B(target.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B('Nepotism')+' — Quit has no effect.', 'good');
+    await weaponNotice(target,'Quit',actor,'Nepotism blocked it.');
     render();
     return;
   }
@@ -1066,8 +1203,9 @@ async function execQuit(actor, target, zone, card){
     target.refill = true;
     log(B(target.name)+' will refill toward '+gameRules().startingHandSize+' cards next turn.');
   } else {
-    await settleDiscard(target, card, 'forced out by Quit', true);
-    log(B(actor.name)+"'s "+B('Quit')+' voided that card outright.', 'bad');
+    const canBank=gameRules().bankForcedWeaponDiscards;
+    await settleDiscard(target, card, 'forced out by Quit', !canBank);
+    log(B(actor.name)+"'s "+B('Quit')+(canBank?' forced that card to settle normally.':' voided that card outright.'), canBank?'':'bad');
   }
   render();
 }
@@ -1102,7 +1240,7 @@ async function resolveAlert(p, key){
         log(B(p.name)+"'s "+B(DEFS[c.key].name)+' is protected from Fired! by its helper.', 'good');
         continue;
       }
-      await settleDiscard(p, c, 'Fired! alert', false, true);
+      await settleAtBaseValue(p, c, 'Fired! alert');
     }
   } else if (key==='recession'){
     for (const q of state.players){
@@ -1155,15 +1293,16 @@ async function chooseOpponent(actor, title, body){
   return byId(v);
 }
 async function chooseQuitZone(actor, target){
+  const canBank=gameRules().bankForcedWeaponDiscards;
   if (!actor.isHuman){
     const best = target.tab.filter(c=>bankPreview(c)>=2).sort((a,b)=>bankPreview(b)-bankPreview(a))[0];
     return best ? {zone:'tab', card:best} : {zone:'hand'};
   }
   const choices = target.tab.map(c=>({
-    label:'Void their '+DEFS[c.key].name,
-    sub:'R'+c.age+'/'+lifespan(c)+(c.owed>0?(' · owes '+c.owed+'h'):(' · '+c.tokens+'h on it')), value:c.uid}));
+    label:(canBank?'Force-discard their ':'Void their ')+DEFS[c.key].name,
+    sub:'R'+c.age+'/'+lifespan(c)+(c.key==='parasite'?(' · pays '+parasitePayout(c,false)+'h on normal settlement'):(c.owed>0?(' · owes '+c.owed+'h'):(' · '+c.tokens+'h on it'))), value:c.uid}));
   choices.push({label:'A random card from their hand', sub:'They refill toward '+gameRules().startingHandSize+' next turn', value:'hand'});
-  const v = await modal({title:'Quit — pick the damage', body:'What must '+target.name+' discard? (It is voided — no effects, no banking.)', choices});
+  const v = await modal({title:'Quit — pick the damage', body:'What must '+target.name+' discard? '+(canBank?'The played card settles normally, including banking or remaining penalties.':'The played card is voided with no banking.'), choices});
   return v==='hand' ? {zone:'hand'} : {zone:'tab', card:target.tab.find(c=>c.uid===v)};
 }
 /* pick any in-play card; if allowAny, self cards included */
@@ -1235,11 +1374,11 @@ async function useHandCard(p, c, plan){
       removeFromHand(); await execQuit(p, t, zc.zone, zc.card); break;
     }
     case 'extension': {
-      const tg = plan && plan.cardTarget ? plan.cardTarget : await chooseAnyPlayedCard(p, 'Extension', 'Protect which card from weapons and delay its expiration by 5 rounds? (Alerts bypass it.)', true);
+      const tg = plan && plan.cardTarget ? plan.cardTarget : await chooseAnyPlayedCard(p, 'Extension', 'Delay which card’s normal expiration by 5 rounds? It does not block weapons or instant expiration.', true);
       if (!tg){ await notify('Extension','No cards in play to extend.'); return false; }
       removeFromHand(); state.discard.push('Extension');
       tg.card.ext++;
-      log(B(p.name)+' files an '+B('Extension')+' on '+tg.owner.name+"'s "+DEFS[tg.card.key].name+' (+5 rounds; weapons cannot affect it).', 'good');
+      log(B(p.name)+' files an '+B('Extension')+' on '+tg.owner.name+"'s "+DEFS[tg.card.key].name+' (+5 rounds to its normal deadline).', 'good');
       break;
     }
     case 'nepotism': {
@@ -1262,7 +1401,7 @@ async function useHandCard(p, c, plan){
       break;
     }
     case 'excused': {
-      const weapons = p.tab.filter(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
+      const weapons = p.tab.filter(x=>DEFS[x.key].t==='weapon' && !x.nepo);
       if (!weapons.length){
         if (p.isHuman) await notify('Excused','There are no unprotected weapon cards on your desk to discard. Excused remains available to cancel an incoming weapon.');
         return false;
@@ -1340,7 +1479,7 @@ async function aiUseFreeHelpers(p){
   for (let guard=0;guard<6;guard++){
     const find=k=>p.hand.find(x=>x.key===k);
     const ex=find('excused');
-    const deskWeapon=p.tab.find(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
+    const deskWeapon=p.tab.find(x=>DEFS[x.key].t==='weapon' && !x.nepo);
     if (ex && deskWeapon){ await useHandCard(p,ex,{cardTarget:{owner:p,card:deskWeapon}}); continue; }
     const ext=find('extension');
     const save=ext && p.tab.find(x=>x.owed===0 && x.tokens>=3 && x.age>=lifespan(x)-1 && !x.nepo);
@@ -1414,6 +1553,7 @@ function endTurn(){
 }
 async function finishGame(reason){
   if (!state || state.finishing || state.over) return;
+  captureGameSnapshot();
   state.finishing=true;
   state.over = true;
   log('🔔 '+B('Closing time.')+(reason?' '+reason.charAt(0).toUpperCase()+reason.slice(1)+'.':'')+' Cards still in play settle as if discarded.', 'alert');
@@ -1432,12 +1572,14 @@ async function finishGame(reason){
     ? (winners.length>1 ? 'SHARED PROMOTION' : 'PROMOTED')
     : 'PASSED OVER';
   log('Final timesheet: '+sorted.map(p=>p.name+' '+p.hours+'h').join(' · ')+'. '+B(winners.map(w=>w.name).join(' & '))+' win'+(winners.length>1?'':'s')+'!', 'good');
-  const again = await modal({
+  const humanWon=winners.some(w=>w.isHuman);
+  recordCompletedGame(humanWon);
+  await modal({
     title:'Final timesheet',
     body:'<span class="promo-stamp">'+title+'</span><table class="final-table"><tr><th></th><th>Employee</th><th>Hours</th></tr>'+rows+'</table>' +
       (winners.length>1 ? 'Tie at the top — the win is shared.' : B(winners[0].name)+' logged the most hours.'),
-    choices:[{label:'Play again', value:true},{label:'Close', value:false}]});
-  if (again) showStart(false);
+    choices:[{label:'Return to start menu', value:true}]});
+  showStart(false,humanWon?'Game recorded as a win.':'Game recorded as a loss.');
 }
 
 /* ================= Human turn actions ================= */
@@ -1515,7 +1657,7 @@ async function handCardMenu(p, c, context){
   } else if (d.t==='weapon'){
     choices.push({label:(d.sub==='imm'?'Use it':'Play it on an opponent'), sub:d.txt+' · '+timing, value:'play'});
   } else if (c.key==='excused'){
-    const inPlayWeapons = p.tab.filter(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
+    const inPlayWeapons = p.tab.filter(x=>DEFS[x.key].t==='weapon' && !x.nepo);
     if (inPlayWeapons.length)
       choices.push({label:'Discard a weapon from your desk', sub:'Cancels an unprotected weapon’s remaining effect · '+timing, value:'play'});
     else
@@ -1600,8 +1742,8 @@ async function aiTurn(p){
   if (sc && L.hours>=1){ await useHandCard(p, sc, {target:L}); return; }
   const td = find('tardy');
   if (td){
-    const forceOut = L.tab.find(x=>x.age>=lifespan(x) && x.tokens>=1 && !x.nepo && !x.ext) ||
-                     L.tab.find(x=>x.age===lifespan(x)-1 && x.tokens>=3 && !x.nepo && !x.ext);
+    const forceOut = L.tab.find(x=>x.age>=lifespan(x) && x.tokens>=1 && !x.nepo) ||
+                     L.tab.find(x=>x.age===lifespan(x)-1 && x.tokens>=3 && !x.nepo);
     if (forceOut){ await useHandCard(p, td, {cardTarget:{owner:L, card:forceOut}}); return; }
   }
 
@@ -1619,7 +1761,7 @@ async function aiTurn(p){
   // 5) helpers consume the turn only in turn-only mode
   if (!rules.helpersAnyTime){
     const ex = find('excused');
-    const deskWeapon = p.tab.find(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
+    const deskWeapon = p.tab.find(x=>DEFS[x.key].t==='weapon' && !x.nepo);
     if (ex && deskWeapon){ await useHandCard(p, ex, {cardTarget:{owner:p, card:deskWeapon}}); return; }
     const ext = find('extension');
     if (ext){
@@ -1663,9 +1805,10 @@ function esc(s){
 }
 function ruleSummary(rules){
   const r=normalizeRules(rules);
-  const parts=[endConditionText(r),r.startingHandSize+'-card hands'];
+  const parts=[endConditionText(r),r.opponentCount+' opponent'+(r.opponentCount===1?'':'s'),r.startingHandSize+'-card hands'];
   parts.push(r.helpersAnyTime?'helpers free anytime':'helpers use the turn');
   parts.push(r.helpersBlockAlerts?'helpers block Alerts':'Alerts bypass helpers');
+  parts.push(r.bankForcedWeaponDiscards?'forced discards settle':'forced discards void');
   return parts.join(' · ');
 }
 function saveRowsHTML(saves){
@@ -1706,24 +1849,26 @@ async function showSettings(fromGame){
       '<div class="rule-grid">' +
         checkboxRow('discardNegativeSetting','Activate negative values when discarded from hand','When off, hand-discarded negative cards have no hour effect.',rules.discardNegativeFromHand) +
         checkboxRow('helperAlertSetting','Attached helpers can block Alerts','Extension or Nepotism protects its attached card from Fired!, Recession, and Amnesia.',rules.helpersBlockAlerts) +
+        checkboxRow('bankForcedSetting','Bank hours when a weapon forces a discard','When on, Quit and making room for a placed weapon use normal settlement. When off, stored hours are lost.',rules.bankForcedWeaponDiscards) +
         checkboxRow('notifySetting','Show event pop-ups','Show a pop-up when an Alert is drawn or a weapon is played on you.',rules.notifyEvents) +
       '</div>' +
       '<div class="radio-stack" style="margin-top:9px;"><div class="setting-copy"><b>Helper timing</b><small>Choose whether helper cards are free reactions/actions or use the player’s turn.</small></div>' +
         '<label class="radio-line"><input type="radio" name="helperTiming" value="any" '+(rules.helpersAnyTime?'checked':'')+'> Use helpers free at any point</label>' +
         '<label class="radio-line"><input type="radio" name="helperTiming" value="turn" '+(!rules.helpersAnyTime?'checked':'')+'> Only on your turn, as your action</label></div>' +
       '<div class="sub-settings">' +
+        '<div class="sub-setting"><label for="opponentCountSetting">Opponents</label><input type="number" id="opponentCountSetting" min="1" max="5" value="'+rules.opponentCount+'"'+lock+'></div>' +
         '<div class="sub-setting"><label for="handSizeSetting">Starting hand size</label><input type="number" id="handSizeSetting" min="1" max="10" value="'+rules.startingHandSize+'"'+lock+'></div>' +
         '<div class="sub-setting"><label for="roundCountSetting">Round limit</label><input type="number" id="roundCountSetting" min="1" max="100" value="'+rules.roundCount+'"'+lock+'></div>' +
         '<div class="sub-setting"><label for="goalHoursSetting">Goal hours</label><input type="number" id="goalHoursSetting" min="1" max="999" value="'+rules.goalHours+'"'+lock+'></div>' +
       '</div>' +
       '<div class="sub-settings" style="grid-template-columns:minmax(0,1fr);">' +
-        '<div class="sub-setting"><label for="deckSizeSetting">Finite deck size</label><input type="number" id="deckSizeSetting" min="'+(rules.startingHandSize*3)+'" max="500" value="'+rules.deckSize+'"'+lock+'></div>' +
+        '<div class="sub-setting"><label for="deckSizeSetting">Finite deck size</label><input type="number" id="deckSizeSetting" min="'+(rules.startingHandSize*(rules.opponentCount+1))+'" max="500" value="'+rules.deckSize+'"'+lock+'></div>' +
       '</div>' +
       '<div class="radio-stack" style="margin-top:9px;"><div class="setting-copy"><b>End condition</b><small>Only the selected condition ends the game.</small></div>' +
         '<label class="radio-line"><input type="radio" name="endType" value="rounds" '+(rules.endType==='rounds'?'checked':'')+lock+'> Round count met</label>' +
         '<label class="radio-line"><input type="radio" name="endType" value="goal" '+(rules.endType==='goal'?'checked':'')+lock+'> Goal hours reached</label>' +
         '<label class="radio-line"><input type="radio" name="endType" value="deck" '+(rules.endType==='deck'?'checked':'')+lock+'> All finite-deck cards played or discarded</label></div>' +
-      '<p class="settings-note">'+(activeGame?'Starting hand size and end-condition setup are locked after dealing. The card-rule switches remain editable and are stored when you save this game.':'These rules are copied into each new game and then stored inside every named save.')+'</p>' +
+      '<p class="settings-note">'+(activeGame?'Opponent count, starting hand size, and end-condition setup are locked after dealing. The card-rule switches remain editable and are stored when you save this game.':'These rules are copied into each new game and then stored inside every named save.')+'</p>' +
     '</div>' +
     '<p id="settingsStatus" style="font-size:11px;margin:12px 0 10px;">'+(activeGame?'Editing this game’s saved rule set.':'Editing defaults for the next new game.')+'</p>' +
     '<div class="choices"><button class="btn" id="applySettingsBtn">Apply game settings</button><button class="btn ghost" id="settingsBackBtn">Back to menu</button></div>';
@@ -1738,15 +1883,18 @@ async function showSettings(fromGame){
       helpersBlockAlerts:$('helperAlertSetting').checked,
       helpersAnyTime:m.querySelector('input[name="helperTiming"]:checked').value==='any',
       startingHandSize:$('handSizeSetting').value,
+      opponentCount:$('opponentCountSetting').value,
       endType:(m.querySelector('input[name="endType"]:checked')||{}).value || rules.endType,
       roundCount:$('roundCountSetting').value,
       goalHours:$('goalHoursSetting').value,
       deckSize:$('deckSizeSetting').value,
+      bankForcedWeaponDiscards:$('bankForcedSetting').checked,
       notifyEvents:$('notifySetting').checked
     });
     if (activeGame){
       const fixed=normalizeRules(state.rules);
       proposed.startingHandSize=fixed.startingHandSize;
+      proposed.opponentCount=fixed.opponentCount;
       proposed.endType=fixed.endType;
       proposed.roundCount=fixed.roundCount;
       proposed.goalHours=fixed.goalHours;
@@ -1762,6 +1910,29 @@ async function showSettings(fromGame){
   };
   $('settingsBackBtn').onclick = ()=>showStart(fromGame);
 }
+function showStats(fromGame){
+  const root=$('modalRoot');
+  root.innerHTML='';
+  const ov=document.createElement('div'); ov.className='overlay';
+  const m=document.createElement('div'); m.className='modal';
+  const stats=readLifetimeStats();
+  const avgBoard=stats.samples ? stats.boardSum/stats.samples : 0;
+  const avgTotal=stats.samples ? stats.totalSum/stats.samples : 0;
+  m.innerHTML=
+    '<h2>Lifetime stats</h2>'+
+    '<p>Completed games recorded in this browser on this device.</p>'+
+    '<div class="stats-grid">'+
+      '<div class="stat-card"><div class="stat-value">'+stats.gamesPlayed+'</div><div class="stat-label">Games played</div></div>'+
+      '<div class="stat-card"><div class="stat-value">'+stats.wins+'</div><div class="stat-label">Games won</div></div>'+
+      '<div class="stat-card"><div class="stat-value">'+stats.losses+'</div><div class="stat-label">Games lost</div></div>'+
+      '<div class="stat-card"><div class="stat-value">'+formatAverage(avgBoard)+'h</div><div class="stat-label">Average hours on all boards at once</div></div>'+
+      '<div class="stat-card wide"><div class="stat-value">'+formatAverage(avgTotal)+'h</div><div class="stat-label">Average hours everywhere — boards plus every player’s stash</div></div>'+
+    '</div>'+
+    '<p style="font-size:11px;">Shared first place counts as a win. Averages use the signed card and stash values sampled throughout completed games, so debt counts below zero.</p>'+
+    '<div class="choices"><button class="btn ghost" id="statsBackBtn">Back to menu</button></div>';
+  ov.appendChild(m); root.appendChild(ov);
+  $('statsBackBtn').onclick=()=>showStart(fromGame);
+}
 async function showStart(fromGame, statusText){
   const root = $('modalRoot');
   root.innerHTML = '';
@@ -1774,11 +1945,12 @@ async function showStart(fromGame, statusText){
   const savedNote = saves.length ? saves.length+' named save'+(saves.length===1?'':'s')+' in this browser' : 'No named saves yet';
   m.innerHTML =
     '<h2 style="font-size:22px; letter-spacing:5px;">CLOCKED&nbsp;IN</h2>' +
-    '<p>Log more <b style="color:var(--brass)">hours</b> than Dana and Marcus before closing time. Saves stay in this browser on this device.</p>' +
+    '<p>Log more <b style="color:var(--brass)">hours</b> than your opponents before closing time. Saves stay in this browser on this device.</p>' +
     '<div class="settings-summary"><b>'+(canResume?'Current game':'Next new game')+':</b> '+esc(ruleSummary(shownRules))+'</div>' +
     '<div class="choices" style="margin-top:12px;">' +
       (canResume ? '<button class="btn" id="resumeBtn">Resume game</button>' : '') +
       '<button class="btn ghost" id="settingsBtn">'+(canResume?'Game settings':'Settings & game setup')+'</button>' +
+      '<button class="btn ghost" id="statsBtn">Stats</button>' +
     '</div>' +
     (canResume ? '<div class="menu-section"><div class="menu-section-head"><h3>Save current game</h3></div>' +
       '<div class="save-create"><input type="text" id="saveNameInput" maxlength="40" placeholder="Example: Round 6 — strong start">' +
@@ -1793,6 +1965,7 @@ async function showStart(fromGame, statusText){
   const resumeBtn = $('resumeBtn');
   if (resumeBtn) resumeBtn.onclick = ()=>{ root.innerHTML=''; render(); };
   $('settingsBtn').onclick = ()=>showSettings(fromGame);
+  $('statsBtn').onclick = ()=>showStats(fromGame);
 
   const saveBtn = $('saveBtn');
   if (saveBtn) saveBtn.onclick = ()=>{
