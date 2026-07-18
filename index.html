@@ -431,11 +431,11 @@ const DEFAULT_GAME_RULES = Object.freeze({
   helpersBlockAlerts:false,
   helpersAnyTime:true,
   startingHandSize:5,
-  opponentCount:2,
+  opponentCount:3,
   endType:'rounds',
   roundCount:40,
-  goalHours:50,
-  deckSize:60,
+  goalHours:25,
+  deckSize:200,
   bankForcedWeaponDiscards:true,
   notifyEvents:true
 });
@@ -528,7 +528,7 @@ function newState(ruleInput){
     discard:[],
     deck:null,
     players,
-    metrics:{boardSum:0,totalSum:0,samples:0,lastSignature:''},
+    metrics:{boardSum:0,totalSum:0,samples:0,lastSignature:'',maxPlayerHours:10},
     statsRecorded:false,
   };
   if (rules.endType==='deck'){
@@ -549,7 +549,8 @@ function hydrateState(saved){
     boardSum:Number(metricSource.boardSum)||0,
     totalSum:Number(metricSource.totalSum)||0,
     samples:Number(metricSource.samples)||0,
-    lastSignature:String(metricSource.lastSignature||'')
+    lastSignature:String(metricSource.lastSignature||''),
+    maxPlayerHours:Number.isFinite(Number(metricSource.maxPlayerHours)) ? Number(metricSource.maxPlayerHours) : Math.max(0,...(restored.players||[]).map(p=>Number(p.hours)||0))
   };
   restored.statsRecorded=!!restored.statsRecorded;
   if (restored.rules.endType==='deck' && !Array.isArray(restored.deck)) restored.deck=[];
@@ -653,21 +654,27 @@ function readSettings(){
     }
     const value = JSON.parse(raw || '{}');
     let defaultsInput=value.gameDefaults || {};
-    if (!value.defaultsVersion && Number(defaultsInput.roundCount)===15){
+    const defaultsVersion=Number(value.defaultsVersion)||0;
+    if (defaultsVersion<2 && Number(defaultsInput.roundCount)===15){
       defaultsInput={...defaultsInput,roundCount:DEFAULT_GAME_RULES.roundCount};
+    }
+    if (defaultsVersion<3){
+      if (defaultsInput.opponentCount===undefined || Number(defaultsInput.opponentCount)===2) defaultsInput={...defaultsInput,opponentCount:DEFAULT_GAME_RULES.opponentCount};
+      if (defaultsInput.goalHours===undefined || Number(defaultsInput.goalHours)===50) defaultsInput={...defaultsInput,goalHours:DEFAULT_GAME_RULES.goalHours};
+      if (defaultsInput.deckSize===undefined || Number(defaultsInput.deckSize)===60) defaultsInput={...defaultsInput,deckSize:DEFAULT_GAME_RULES.deckSize};
     }
     const result={
       theme:THEMES[value.theme] ? value.theme : 'classic',
       gameDefaults:normalizeRules(defaultsInput)
     };
-    if (!value.defaultsVersion) writeSettings({...result,defaultsVersion:2});
+    if (defaultsVersion<3) writeSettings({...result,defaultsVersion:3});
     return result;
   } catch (err) {
     return {theme:'classic',gameDefaults:normalizeRules()};
   }
 }
 function writeSettings(next){
-  try { localStorage.setItem(SETTINGS_KEY,JSON.stringify({...next,defaultsVersion:2})); return true; }
+  try { localStorage.setItem(SETTINGS_KEY,JSON.stringify({...next,defaultsVersion:3})); return true; }
   catch(err){ return false; }
 }
 function applyTheme(theme){
@@ -685,7 +692,7 @@ applyTheme(readSettings().theme);
 
 /* ================= Lifetime statistics ================= */
 function emptyLifetimeStats(){
-  return {gamesPlayed:0,wins:0,losses:0,boardSum:0,totalSum:0,samples:0};
+  return {gamesPlayed:0,wins:0,losses:0,boardSum:0,totalSum:0,samples:0,totalFinalHours:0,highestPlayerHours:0,cardsUsedSum:0};
 }
 function readLifetimeStats(){
   try {
@@ -696,7 +703,10 @@ function readLifetimeStats(){
       losses:Math.max(0,Number(raw.losses)||0),
       boardSum:Number(raw.boardSum)||0,
       totalSum:Number(raw.totalSum)||0,
-      samples:Math.max(0,Number(raw.samples)||0)
+      samples:Math.max(0,Number(raw.samples)||0),
+      totalFinalHours:Number(raw.totalFinalHours)||0,
+      highestPlayerHours:Number(raw.highestPlayerHours)||0,
+      cardsUsedSum:Math.max(0,Number(raw.cardsUsedSum)||0)
     };
   } catch(err){ return emptyLifetimeStats(); }
 }
@@ -721,7 +731,7 @@ function statsSignature(){
 }
 function captureGameSnapshot(){
   if (!state || state.over || state.finishing) return;
-  if (!state.metrics) state.metrics={boardSum:0,totalSum:0,samples:0,lastSignature:''};
+  if (!state.metrics) state.metrics={boardSum:0,totalSum:0,samples:0,lastSignature:'',maxPlayerHours:0};
   const signature=statsSignature();
   if (signature===state.metrics.lastSignature) return;
   let board=0;
@@ -733,17 +743,23 @@ function captureGameSnapshot(){
   state.metrics.boardSum += board;
   state.metrics.totalSum += board + stashes;
   state.metrics.samples++;
+  state.metrics.maxPlayerHours=Math.max(Number(state.metrics.maxPlayerHours)||0,...state.players.map(p=>Number(p.hours)||0));
   state.metrics.lastSignature=signature;
 }
 function recordCompletedGame(humanWon){
   if (!state || state.statsRecorded) return;
-  const metrics=state.metrics || {boardSum:0,totalSum:0,samples:0};
+  const metrics=state.metrics || {boardSum:0,totalSum:0,samples:0,maxPlayerHours:0};
   const stats=readLifetimeStats();
+  const finalHours=state.players.reduce((sum,p)=>sum+(Number(p.hours)||0),0);
+  const highestNow=Math.max(0,...state.players.map(p=>Number(p.hours)||0));
   stats.gamesPlayed++;
   if (humanWon) stats.wins++; else stats.losses++;
   stats.boardSum += Number(metrics.boardSum)||0;
   stats.totalSum += Number(metrics.totalSum)||0;
   stats.samples += Number(metrics.samples)||0;
+  stats.totalFinalHours += finalHours;
+  stats.highestPlayerHours=Math.max(Number(stats.highestPlayerHours)||0,Number(metrics.maxPlayerHours)||0,highestNow);
+  stats.cardsUsedSum += Array.isArray(state.discard) ? state.discard.length : 0;
   writeLifetimeStats(stats);
   state.statsRecorded=true;
 }
@@ -1918,6 +1934,7 @@ function showStats(fromGame){
   const stats=readLifetimeStats();
   const avgBoard=stats.samples ? stats.boardSum/stats.samples : 0;
   const avgTotal=stats.samples ? stats.totalSum/stats.samples : 0;
+  const avgCards=stats.gamesPlayed ? stats.cardsUsedSum/stats.gamesPlayed : 0;
   m.innerHTML=
     '<h2>Lifetime stats</h2>'+
     '<p>Completed games recorded in this browser on this device.</p>'+
@@ -1925,10 +1942,13 @@ function showStats(fromGame){
       '<div class="stat-card"><div class="stat-value">'+stats.gamesPlayed+'</div><div class="stat-label">Games played</div></div>'+
       '<div class="stat-card"><div class="stat-value">'+stats.wins+'</div><div class="stat-label">Games won</div></div>'+
       '<div class="stat-card"><div class="stat-value">'+stats.losses+'</div><div class="stat-label">Games lost</div></div>'+
+      '<div class="stat-card"><div class="stat-value">'+formatAverage(stats.totalFinalHours)+'h</div><div class="stat-label">Total final hours across completed games</div></div>'+
+      '<div class="stat-card"><div class="stat-value">'+formatAverage(stats.highestPlayerHours)+'h</div><div class="stat-label">Highest individual hour count of all time</div></div>'+
+      '<div class="stat-card"><div class="stat-value">'+formatAverage(avgCards)+'</div><div class="stat-label">Average cards used per game</div></div>'+
       '<div class="stat-card"><div class="stat-value">'+formatAverage(avgBoard)+'h</div><div class="stat-label">Average hours on all boards at once</div></div>'+
       '<div class="stat-card wide"><div class="stat-value">'+formatAverage(avgTotal)+'h</div><div class="stat-label">Average hours everywhere — boards plus every player’s stash</div></div>'+
     '</div>'+
-    '<p style="font-size:11px;">Shared first place counts as a win. Averages use the signed card and stash values sampled throughout completed games, so debt counts below zero.</p>'+
+    '<p style="font-size:11px;">Shared first place counts as a win. Total final hours are the signed sum of every player’s ending stash. Highest hours tracks the largest individual stash reached at any point. Cards used are cards that reached the discard pile. Other averages use signed board and stash values sampled throughout completed games, so debt counts below zero.</p>'+
     '<div class="choices"><button class="btn ghost" id="statsBackBtn">Back to menu</button></div>';
   ov.appendChild(m); root.appendChild(ov);
   $('statsBackBtn').onclick=()=>showStart(fromGame);
