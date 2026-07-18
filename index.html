@@ -6,19 +6,47 @@
 <title>Clocked In — the billable hours card game</title>
 <style>
   :root{
-    --desk:#252a33; --panel:#2d3440; --panel2:#343c4a; --line:#3f4959;
+    --desk:#252a33; --desk-glow:#2f3644; --panel:#2d3440; --panel2:#343c4a; --line:#3f4959;
+    --header-top:#2a303b; --header-bottom:#262b35; --header-dim:#9aa5b5; --brand-text:#f2e8d0;
+    --draw-a:#3a4152; --draw-b:#333a49; --discard-bg:#2a2f3a;
+    --slot-line:#4a5466; --slot-text:#556074; --choice-hover:#39424f; --overlay-bg:rgba(12,15,20,.72);
     --manila:#f2e8d0; --manila-dk:#e6d8b6; --ink:#2a2318; --ink-soft:#5c5240;
+    --card-border:#b8a87e; --age-track:#cdbd97; --heading:#f2e8d0; --hint-strong:#f2e8d0;
     --stamp:#c8402f; --brass:#d9a83f; --brass-dk:#a87c22;
     --blue:#4a7396; --green:#4d8a5f; --hazard:#e3b93a;
     --text:#dfe4ec; --text-dim:#9aa5b5;
     --mono:"Courier New", ui-monospace, SFMono-Regular, Menlo, monospace;
     --body:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
+  html[data-theme="midnight"]{
+    --desk:#111827; --desk-glow:#23314a; --panel:#1c2636; --panel2:#253247; --line:#3b4b64;
+    --header-top:#182235; --header-bottom:#111a2a; --header-dim:#9baac0; --brand-text:#eef2f7;
+    --draw-a:#33445e; --draw-b:#29384e; --discard-bg:#182235; --slot-line:#475a75; --slot-text:#657894; --choice-hover:#30405a;
+    --manila:#eef2f7; --manila-dk:#dce4ee; --ink:#172033; --ink-soft:#4f5d70; --card-border:#aebbc9; --age-track:#bec9d5;
+    --heading:#eef2f7; --hint-strong:#eef2f7; --stamp:#d35a4d; --brass:#e0b45a; --brass-dk:#9f7624;
+    --blue:#4f7da7; --green:#4f8b73; --hazard:#e4bd4c; --text:#e7edf5; --text-dim:#9cabc0;
+  }
+  html[data-theme="sage"]{
+    --desk:#26332e; --desk-glow:#3a4a43; --panel:#304039; --panel2:#394b43; --line:#52645c;
+    --header-top:#2c3934; --header-bottom:#23302b; --header-dim:#a9b9b0; --brand-text:#f3ead7;
+    --draw-a:#46574f; --draw-b:#3b4c44; --discard-bg:#293630; --slot-line:#60736a; --slot-text:#7f9188; --choice-hover:#465a50;
+    --manila:#f3ead7; --manila-dk:#e5d9bf; --ink:#29251d; --ink-soft:#5d5546; --card-border:#b5a77f; --age-track:#c8b991;
+    --heading:#f3ead7; --hint-strong:#f3ead7; --stamp:#bd5949; --brass:#d8ae58; --brass-dk:#997225;
+    --blue:#547a8e; --green:#5f8d70; --hazard:#d9b845; --text:#e5ece7; --text-dim:#a8b7ae;
+  }
+  html[data-theme="paper"]{
+    --desk:#e7e2d8; --desk-glow:#f7f4ed; --panel:#f7f4ed; --panel2:#fffdf8; --line:#c9c1b4;
+    --header-top:#41464c; --header-bottom:#30353a; --header-dim:#c7cdd3; --brand-text:#fff8e8;
+    --draw-a:#59616b; --draw-b:#4c545d; --discard-bg:#353b41; --slot-line:#b8afa1; --slot-text:#8d857a; --choice-hover:#eee9df;
+    --overlay-bg:rgba(37,40,43,.58); --manila:#fffdf7; --manila-dk:#f1eadb; --ink:#2f2a22; --ink-soft:#635b4f;
+    --card-border:#b9ad97; --age-track:#d6ccb9; --heading:#34312c; --hint-strong:#34312c; --stamp:#a94a3f;
+    --brass:#b8862f; --brass-dk:#87631f; --blue:#5b7691; --green:#5e7d68; --hazard:#d4a92e; --text:#302d28; --text-dim:#6f695f;
+  }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{height:100%;}
   body{
     background:var(--desk);
-    background-image:radial-gradient(ellipse at 50% -10%, #2f3644 0%, var(--desk) 60%);
+    background-image:radial-gradient(ellipse at 50% -10%, var(--desk-glow) 0%, var(--desk) 60%);
     color:var(--text); font-family:var(--body); font-size:14px; line-height:1.45;
   }
   button{font-family:inherit; cursor:pointer;}
@@ -28,14 +56,14 @@
   header{
     display:flex; align-items:center; gap:22px; flex-wrap:wrap;
     padding:12px 20px; border-bottom:1px solid var(--line);
-    background:linear-gradient(#2a303b,#262b35);
+    background:linear-gradient(var(--header-top),var(--header-bottom));
   }
   .brand{display:flex; flex-direction:column;}
   .brand h1{
     font-family:var(--mono); font-size:22px; letter-spacing:5px; font-weight:700;
-    color:var(--manila);
+    color:var(--brand-text);
   }
-  .brand small{color:var(--text-dim); font-size:11px; letter-spacing:1px; text-transform:uppercase;}
+  .brand small{color:var(--header-dim); font-size:11px; letter-spacing:1px; text-transform:uppercase;}
   .round-stamp{
     font-family:var(--mono); font-weight:700; letter-spacing:2px; font-size:16px;
     color:var(--stamp); border:2.5px solid var(--stamp); border-radius:4px;
@@ -44,7 +72,7 @@
   }
   .turn-ind{
     font-family:var(--mono); font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
-    color:var(--text-dim); flex:1; min-width:180px;
+    color:var(--header-dim); flex:1; min-width:180px;
   }
   .turn-ind b{color:var(--brass);}
   .hdr-piles{display:flex; gap:12px; align-items:center;}
@@ -52,12 +80,12 @@
     width:74px; height:56px; border-radius:6px; border:1px solid var(--line);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     font-family:var(--mono); font-size:10px; letter-spacing:1px; text-transform:uppercase;
-    color:var(--text-dim); text-align:center; padding:4px;
+    color:var(--header-dim); text-align:center; padding:4px;
   }
-  .pile.draw{background:repeating-linear-gradient(45deg,#3a4152 0 6px,#333a49 6px 12px);}
-  .pile.draw b{font-size:16px; color:var(--manila);}
-  .pile.discard{background:#2a2f3a;}
-  .pile.discard b{color:var(--manila); font-size:10.5px; line-height:1.2;}
+  .pile.draw{background:repeating-linear-gradient(45deg,var(--draw-a) 0 6px,var(--draw-b) 6px 12px);}
+  .pile.draw b{font-size:16px; color:var(--brand-text);}
+  .pile.discard{background:var(--discard-bg);}
+  .pile.discard b{color:var(--brand-text); font-size:10.5px; line-height:1.2;}
 
   /* ---------- layout ---------- */
   .layout{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:16px; padding:16px 20px; max-width:1440px; margin:0 auto;}
@@ -83,8 +111,8 @@
 
   .desk-slots{display:flex; gap:10px; flex-wrap:wrap; min-height:150px;}
   .slot-empty{
-    width:126px; min-height:148px; border:1.5px dashed #4a5466; border-radius:8px;
-    display:flex; align-items:center; justify-content:center; color:#556074;
+    width:126px; min-height:148px; border:1.5px dashed var(--slot-line); border-radius:8px;
+    display:flex; align-items:center; justify-content:center; color:var(--slot-text);
     font-family:var(--mono); font-size:10px; letter-spacing:2px;
   }
 
@@ -93,7 +121,7 @@
     width:126px; min-height:148px; background:linear-gradient(170deg,var(--manila),var(--manila-dk));
     border-radius:8px; color:var(--ink); display:flex; flex-direction:column;
     box-shadow:0 2px 5px rgba(0,0,0,.4); position:relative; overflow:hidden;
-    border:1px solid #b8a87e; text-align:left; font-family:var(--body); flex-shrink:0;
+    border:1px solid var(--card-border); text-align:left; font-family:var(--body); flex-shrink:0;
   }
   .card.sm{width:112px; min-height:132px;}
   .card .band{
@@ -109,7 +137,7 @@
     display:flex; align-items:center; justify-content:space-between; gap:4px;
     padding:5px 7px 6px; font-family:var(--mono); font-size:10px; font-weight:700;
   }
-  .agebar{height:4px; background:#cdbd97; border-radius:2px; overflow:hidden; margin:0 7px 4px;}
+  .agebar{height:4px; background:var(--age-track); border-radius:2px; overflow:hidden; margin:0 7px 4px;}
   .agebar i{display:block; height:100%; background:var(--stamp); transition:width .3s;}
   .chips{display:flex; align-items:center; height:20px;}
   .chip{
@@ -123,7 +151,7 @@
   .tags{position:absolute; top:22px; right:4px; display:flex; flex-direction:column; gap:3px; align-items:flex-end;}
   .tag{
     font-family:var(--mono); font-size:8px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
-    background:var(--ink); color:var(--manila); border-radius:3px; padding:1px 5px;
+    background:var(--ink); color:var(--brand-text); border-radius:3px; padding:1px 5px;
   }
   .tag.nepo{background:var(--green); color:#fff;}
   .tag.stamp{background:var(--stamp); color:#fff;}
@@ -143,7 +171,7 @@
     background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px 16px;
   }
   .action-bar .hint{flex:1; min-width:200px; color:var(--text-dim); font-size:13px;}
-  .action-bar .hint b{color:var(--manila);}
+  .action-bar .hint b{color:var(--hint-strong);}
   .btn{
     font-family:var(--mono); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; font-size:12px;
     border-radius:6px; padding:10px 18px; border:1px solid var(--brass-dk);
@@ -175,7 +203,7 @@
 
   /* ---------- modal ---------- */
   .overlay{
-    position:fixed; inset:0; background:rgba(12,15,20,.72); display:flex;
+    position:fixed; inset:0; background:var(--overlay-bg); display:flex;
     align-items:center; justify-content:center; z-index:50; padding:20px;
   }
   .modal{
@@ -183,14 +211,14 @@
     max-width:640px; width:100%; max-height:86vh; overflow-y:auto; padding:20px 22px;
     box-shadow:0 20px 60px rgba(0,0,0,.6);
   }
-  .modal h2{font-family:var(--mono); font-size:15px; letter-spacing:2px; text-transform:uppercase; color:var(--manila); margin-bottom:8px;}
+  .modal h2{font-family:var(--mono); font-size:15px; letter-spacing:2px; text-transform:uppercase; color:var(--heading); margin-bottom:8px;}
   .modal p{color:var(--text-dim); margin-bottom:14px; font-size:13px;}
   .modal .choices{display:flex; flex-direction:column; gap:8px;}
   .choice-btn{
     text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:8px;
     padding:10px 14px; color:var(--text); font-size:13px; transition:border-color .12s, background .12s;
   }
-  .choice-btn:hover{border-color:var(--brass-dk); background:#39424f;}
+  .choice-btn:hover{border-color:var(--brass-dk); background:var(--choice-hover);}
   .choice-btn small{display:block; color:var(--text-dim); font-size:11px; margin-top:2px;}
   .choice-btn.danger{border-color:#6e3a33;}
   .choice-btn.danger:hover{border-color:var(--stamp);}
@@ -206,9 +234,65 @@
     color:var(--stamp); border:3px solid var(--stamp); border-radius:6px; padding:8px 18px;
     transform:rotate(-4deg); margin-bottom:12px;
   }
-  input[type=number]{
+  input[type=number], input[type=text]{
     background:var(--panel); border:1px solid var(--line); color:var(--text);
-    font-family:var(--mono); font-size:16px; padding:8px 12px; border-radius:6px; width:90px;
+    font-family:var(--mono); font-size:15px; padding:8px 12px; border-radius:6px;
+  }
+  input[type=number]{width:90px;}
+  input[type=text]{width:100%; min-width:0;}
+  input::placeholder{color:var(--text-dim); opacity:.75;}
+  .menu-section{margin-top:16px; padding-top:14px; border-top:1px solid var(--line);}
+  .menu-section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;}
+  .menu-section h3{font-family:var(--mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim);}
+  .save-create{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px;}
+  .save-list{display:flex; flex-direction:column; gap:8px;}
+  .save-empty{border:1px dashed var(--line); border-radius:8px; padding:12px; color:var(--text-dim); font-size:12px; text-align:center;}
+  .save-row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--panel);}
+  .save-info{min-width:0;}
+  .save-name{font-weight:700; color:var(--text); overflow-wrap:anywhere;}
+  .save-meta{font-size:10.5px; color:var(--text-dim); margin-top:2px;}
+  .save-actions{display:flex; gap:6px; flex-shrink:0;}
+  .mini-btn{font-family:var(--mono); font-size:10px; letter-spacing:1px; text-transform:uppercase; padding:6px 9px; border-radius:5px; border:1px solid var(--line); background:transparent; color:var(--text-dim);}
+  .mini-btn:hover{border-color:var(--brass-dk); color:var(--text);}
+  .mini-btn.danger:hover{border-color:var(--stamp); color:var(--stamp);}
+  .theme-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0 16px;}
+  .theme-option{display:flex; align-items:center; gap:10px; text-align:left; padding:11px; border:1px solid var(--line); border-radius:9px; background:var(--panel); color:var(--text);}
+  .theme-option:hover,.theme-option.active{border-color:var(--brass-dk);}
+  .theme-option.active{box-shadow:0 0 0 1px var(--brass-dk) inset;}
+  .theme-option b{display:block; font-size:12px;}
+  .theme-option small{display:block; color:var(--text-dim); font-size:10.5px; margin-top:1px;}
+  .theme-swatch{width:36px; height:36px; border-radius:7px; border:1px solid rgba(127,127,127,.35); flex-shrink:0;}
+  .theme-swatch.classic{background:linear-gradient(135deg,#252a33 0 50%,#f2e8d0 50%);}
+  .theme-swatch.midnight{background:linear-gradient(135deg,#111827 0 50%,#eef2f7 50%);}
+  .theme-swatch.sage{background:linear-gradient(135deg,#26332e 0 50%,#f3ead7 50%);}
+  .theme-swatch.paper{background:linear-gradient(135deg,#e7e2d8 0 50%,#41464c 50%);}
+  .settings-block{margin-top:18px; padding-top:16px; border-top:1px solid var(--line);}
+  .settings-block:first-of-type{margin-top:10px;}
+  .settings-block h3{font-family:var(--mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px;}
+  .rule-grid{display:flex; flex-direction:column; gap:9px;}
+  .setting-row{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:10px 11px; border:1px solid var(--line); border-radius:8px; background:var(--panel);}
+  .setting-copy{min-width:0;}
+  .setting-copy b{display:block; font-size:12px; color:var(--text);}
+  .setting-copy small{display:block; color:var(--text-dim); font-size:10.5px; margin-top:2px;}
+  .setting-control{flex-shrink:0; display:flex; align-items:center; gap:7px;}
+  .setting-control input[type=checkbox]{width:18px; height:18px; accent-color:var(--brass);}
+  .radio-stack{display:flex; flex-direction:column; gap:7px; padding:10px 11px; border:1px solid var(--line); border-radius:8px; background:var(--panel);}
+  .radio-line{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text);}
+  .radio-line input{accent-color:var(--brass);}
+  .sub-settings{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:9px;}
+  .sub-setting{padding:9px; border:1px solid var(--line); border-radius:8px; background:var(--panel);}
+  .sub-setting label{display:block; color:var(--text-dim); font-size:10px; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;}
+  .sub-setting input{width:100%;}
+  .settings-note{font-size:10.5px; color:var(--text-dim); margin:8px 0 0;}
+  .settings-summary{padding:10px 11px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--text-dim); font-size:11px;}
+  .settings-summary b{color:var(--text);}
+  input:disabled{opacity:.55; cursor:not-allowed;}
+  @media (max-width:520px){
+    .save-create{grid-template-columns:1fr;}
+    .save-row{align-items:flex-start; flex-direction:column;}
+    .theme-grid{grid-template-columns:1fr;}
+    .sub-settings{grid-template-columns:1fr;}
+    .setting-row{flex-direction:column;}
   }
   @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
 </style>
@@ -223,7 +307,7 @@
   <div class="round-stamp" id="roundStamp">ROUND —</div>
   <div class="turn-ind" id="turnInd">Setting up the office…</div>
   <div class="hdr-piles">
-    <div class="pile draw"><b>∞</b><span>Draw pile</span></div>
+    <div class="pile draw"><b id="drawCount">∞</b><span>Draw pile</span></div>
     <div class="pile discard" id="discardPile"><span>Discard</span><b>—</b></div>
   </div>
 </header>
@@ -247,6 +331,7 @@
 
     <div class="action-bar">
       <div class="hint" id="hint">Welcome to the office.</div>
+      <button class="btn ghost" id="menuBtn" disabled>Menu</button>
       <button class="btn ghost" id="skipBtn" disabled>Skip turn</button>
       <button class="btn" id="drawBtn" disabled>Punch in &amp; draw</button>
     </div>
@@ -262,24 +347,24 @@
         <summary>House rules (rulings made by this app)</summary>
         <ol>
           <li><b>A turn</b> is: your cards age one round, then you either <b>skip</b>, or <b>draw and take exactly one action</b> — play one card, use one card, or discard one card (from hand or desk).</li>
-          <li><b>Discarding from hand never triggers a card's effect</b> (per rules Example 1, where discarding a play card earns nothing). Weapons and helpers must be <i>used</i> to take effect; unwanted ones can simply be tossed.</li>
-          <li><b>A drawn Alert</b> resolves immediately and uses up your whole turn. Fired! and Recession immediately discard affected desk cards with normal settlement, so earned hours bank and unrecovered costs remain lost. Alerts are never dealt in opening hands, and never appear in refill/redraw draws — only on your own turn's draw.</li>
+          <li><b>Hand-discard costs are configurable per game.</b> When enabled, any printed up-front negative value triggers when the card leaves the hand; cards without a printed hour value do nothing.</li>
+          <li><b>A drawn Alert</b> resolves immediately and uses up the turn. Fired! and Recession discard affected desk cards using normal settlement and reset rules. Per-game settings decide whether attached helpers can protect their cards from Alerts.</li>
           <li><b>Negative cards</b> (Risky, Stock Market, Downsizing): the full cost is paid the moment the card enters play. One hour returns to you each round until repaid, then the card earns from the pile. Discarding while hours are still owed forfeits them. <b>Expiring</b> loses everything on the card <i>and</i> charges the base cost again.</li>
           <li><b>Risky</b> jumps to a total of +8 on its 8th round (per its card text), then expires on the 9th.</li>
           <li><b>Professional</b> pays +10 only when discarded on round 8 or later, up to its (possibly extended) deadline. Expiring pays nothing.</li>
           <li><b>Tardy</b> ages the target card one round with no earnings — it can force an immediate expiration.</li>
-          <li><b>Parasite</b> moves 1 hour per round from its holder to its attacker, 4 hours total. Discarding it early pays the attacker the remaining balance at once.</li>
-          <li><b>Quit</b>: the attacker picks a visible played card, or "hand" (random card). A card discarded by Quit is <b>voided</b> — hours on it are lost, no costs charged, no effects. A player who lost a hand card refills to 5 free at the start of their next turn.</li>
+          <li><b>Parasite</b> moves 1 hour per round from its holder to its attacker, 4 hours total. A normal early discard pays the remaining balance. If Parasite expires or an Alert force-discards it, it resets and pays the attacker the full 4h.</li>
+          <li><b>Quit</b>: the attacker picks a visible played card, or "hand" (random card). A played card discarded by Quit is voided. A player who loses a hand card refills toward the game’s configured hand size.</li>
           <li><b>Foreign Exchange</b> swaps one random hand card from each side.</li>
-          <li><b>Excused</b> can be used from hand at any time, for free, to cancel a weapon aimed at you (never an Alert). As your action, it can also discard one unprotected weapon already on your desk without triggering that weapon's remaining effect. Against <b>Downsizing</b> it deflects: you are skipped and it moves on. Downsizing dies once every player has suffered or deflected it, and it charges its full cost to each new holder.</li>
+          <li><b>Helper timing is configurable per game.</b> Helpers can either be free at any time or restricted to your own turn as its action. Excused can remove an unprotected weapon already in play.</li>
           <li><b>Making room</b>: if a play-weapon lands on a full desk, you discard one of your own cards <i>normally</i> (banking rules apply — this one isn't voided).</li>
           <li>While a <b>weapon sits on your desk</b>, your unprotected non-weapon cards neither earn nor recover owed hours. They still age and can expire. A card protected by <b>Extension or Nepotism</b> overrides this freeze.</li>
-          <li><b>Performance Review</b>: weapons in your hand are executed (you pick targets); play and helper cards discard with no effect; then you redraw to 5.</li>
+          <li><b>Performance Review</b>: your hand is discarded under the game’s hand-discard rule, then you redraw toward the configured hand size.</li>
           <li><b>Amnesia</b> rebuilds every card in play as freshly played: earned hours return to the pile, attachments (Extension, Nepotism) are removed, and negative cards re-charge whatever you had recovered.</li>
           <li><b>Extension</b> adds 5 rounds and blocks weapons from affecting its protected card. <b>Nepotism</b> also blocks weapons and stops normal expiry. Only Alerts bypass helpers.</li>
           <li><b>Sharing is Caring</b> earns whenever its linked player's cards earn from the pile. It voids (hours lost) the moment any card of yours or theirs expires.</li>
           <li><b>Hour totals can go negative</b> (tracked as debt, per rules Example 3). Scammer can't steal from a player at 0 or below.</li>
-          <li><b>Game end</b>: after the final round, cards still in play settle as if discarded — earned hours bank, unrecovered costs stay lost. Most hours wins; ties share the win.</li>
+          <li><b>Game end is configurable:</b> a round limit, a goal-hour threshold, or a finite deck. Cards still in play settle as if discarded when the game ends.</li>
         </ol>
       </details>
     </div>
@@ -309,9 +394,9 @@ const DEFS = {
   nepotism:{t:'helper',name:'Nepotism',txt:'Protect a card from weapons and normal expiry. Alerts bypass it. It stops earning past its deadline.',w:3},
   newbie:{t:'helper',name:'Newbie',txt:'Dead hand: discard your hand (card costs still apply) and draw 5 new cards.',w:3},
   amnesia:{t:'alert',name:'Amnesia',txt:'Every card in play resets to freshly played.',w:1},
-  fired:{t:'alert',name:'Fired!',txt:'Immediately discard and settle all cards on your desk.',w:1},
+  fired:{t:'alert',name:'Fired!',txt:'Immediately discard all cards on your desk. Printed up-front hour values trigger again.',w:1},
   performanceReview:{t:'alert',name:'Performance Review',txt:'Discard your whole hand — card costs are charged, nothing else triggers — then redraw 5.',w:1},
-  recession:{t:'alert',name:'Recession',txt:'Immediately discard and settle every card on every player’s desk.',w:1},
+  recession:{t:'alert',name:'Recession',txt:'Immediately discard every desk card. Printed up-front hour values trigger again.',w:1},
 };
 const KEYS = Object.keys(DEFS);
 const TOTAL_W = KEYS.reduce((s,k)=>s+DEFS[k].w,0);
@@ -323,6 +408,50 @@ let _uid = 1;
 const $ = id => document.getElementById(id);
 const rint = n => Math.floor(Math.random()*n);
 const pick = a => a[rint(a.length)];
+const SAVE_LIST_KEY = 'clockedInNamedSavesV2';
+const LEGACY_SAVE_KEY = 'clockedInSaveV1';
+const SETTINGS_KEY = 'clockedInSettingsV2';
+const LEGACY_SETTINGS_KEY = 'clockedInSettingsV1';
+const THEMES = {
+  classic:{name:'Classic Desk', note:'Original charcoal and manila'},
+  midnight:{name:'Midnight Blue', note:'Cool navy and steel'},
+  sage:{name:'Sage Office', note:'Muted green and warm paper'},
+  paper:{name:'Paper Light', note:'Light neutral workspace'}
+};
+const DEFAULT_GAME_RULES = Object.freeze({
+  discardNegativeFromHand:true,
+  helpersBlockAlerts:false,
+  helpersAnyTime:true,
+  startingHandSize:5,
+  endType:'rounds',
+  roundCount:15,
+  goalHours:50,
+  deckSize:60,
+  notifyEvents:true
+});
+function clampInt(value, min, max, fallback){
+  const n = parseInt(value,10);
+  return Number.isFinite(n) ? Math.max(min,Math.min(max,n)) : fallback;
+}
+function normalizeRules(value){
+  const v = value || {};
+  const hand = clampInt(v.startingHandSize,1,10,DEFAULT_GAME_RULES.startingHandSize);
+  const endType = ['rounds','goal','deck'].includes(v.endType) ? v.endType : DEFAULT_GAME_RULES.endType;
+  return {
+    discardNegativeFromHand:v.discardNegativeFromHand!==false,
+    helpersBlockAlerts:!!v.helpersBlockAlerts,
+    helpersAnyTime:v.helpersAnyTime!==false,
+    startingHandSize:hand,
+    endType,
+    roundCount:clampInt(v.roundCount,1,100,DEFAULT_GAME_RULES.roundCount),
+    goalHours:clampInt(v.goalHours,1,999,DEFAULT_GAME_RULES.goalHours),
+    deckSize:clampInt(v.deckSize,hand*3,500,Math.max(DEFAULT_GAME_RULES.deckSize,hand*3)),
+    notifyEvents:v.notifyEvents!==false
+  };
+}
+function gameRules(){
+  return normalizeRules(state && state.rules ? state.rules : readSettings().gameDefaults);
+}
 function drawKey(allowAlert){
   let r = Math.random() * (allowAlert ? TOTAL_W : NONALERT_W);
   for (const k of KEYS){
@@ -332,30 +461,189 @@ function drawKey(allowAlert){
   }
   return 'onTheClock';
 }
+function shuffle(a){
+  for (let i=a.length-1;i>0;i--){
+    const j=rint(i+1); [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function buildDeck(size, guaranteedNonAlerts){
+  const deck=[];
+  const safe=Math.min(size,guaranteedNonAlerts);
+  for (let i=0;i<safe;i++) deck.push(drawKey(false));
+  for (let i=safe;i<size;i++) deck.push(drawKey(true));
+  return shuffle(deck);
+}
+function drawCardKey(allowAlert){
+  if (state && gameRules().endType==='deck'){
+    if (!Array.isArray(state.deck) || !state.deck.length) return null;
+    let idx=0;
+    if (!allowAlert) idx=state.deck.findIndex(k=>DEFS[k] && DEFS[k].t!=='alert');
+    if (idx<0) return null;
+    return state.deck.splice(idx,1)[0];
+  }
+  return drawKey(allowAlert);
+}
 function makeCard(key){
   const d = DEFS[key];
   return {uid:_uid++, key, age:0, tokens:0, owed:0, ext:0, nepo:false,
           link:null, attacker:null, transfers:0};
 }
 const lifespan = c => DEFS[c.key].life + c.ext*5;
+const hasAttachedHelper = c => !!(c && (c.nepo || c.ext));
 
 /* ================= State ================= */
 var state = null;
-function newState(maxRounds){
-  return {
-    maxRounds, round:1, turnIdx:0, over:false,
-    phase:'idle',            // 'turnStart' | 'action' during human turn
-    discard:[],              // {name, t}
+function newState(ruleInput){
+  const rules=normalizeRules(ruleInput);
+  const stateObj={
+    rules,
+    maxRounds:rules.roundCount,
+    round:1, turnIdx:0, over:false, finishing:false,
+    phase:'idle',
+    discard:[],
+    deck:null,
     players:[
       {id:0, name:'You',    isHuman:true,  hours:10, hand:[], tab:[], refill:false},
       {id:1, name:'Dana',   isHuman:false, hours:10, hand:[], tab:[], refill:false},
       {id:2, name:'Marcus', isHuman:false, hours:10, hand:[], tab:[], refill:false},
     ],
   };
+  if (rules.endType==='deck'){
+    stateObj.deck=buildDeck(rules.deckSize,rules.startingHandSize*stateObj.players.length);
+  }
+  return stateObj;
+}
+function hydrateState(saved){
+  const restored=saved || {};
+  restored.rules=normalizeRules(restored.rules || {roundCount:restored.maxRounds || 15});
+  restored.maxRounds=restored.rules.roundCount;
+  restored.finishing=false;
+  restored.justDrawn=restored.justDrawn || null;
+  if (restored.rules.endType==='deck' && !Array.isArray(restored.deck)) restored.deck=[];
+  return restored;
 }
 const cur = () => state.players[state.turnIdx];
 const byId = id => state.players[id];
 const others = p => state.players.filter(q=>q.id!==p.id);
+function safeSavePoint(){
+  return !!(state && !state.over && cur().isHuman && (state.phase==='turnStart' || state.phase==='action'));
+}
+function validSave(save){
+  return !!(save && (save.version===1 || save.version===2) && save.state && Array.isArray(save.state.players) && save.state.players.length===3);
+}
+function writeSaveList(saves){
+  try {
+    localStorage.setItem(SAVE_LIST_KEY, JSON.stringify(saves));
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+function readSaveList(){
+  try {
+    const raw = localStorage.getItem(SAVE_LIST_KEY);
+    let saves = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(saves)) saves = [];
+    saves = saves.filter(validSave);
+    if (!raw){
+      const legacyRaw = localStorage.getItem(LEGACY_SAVE_KEY);
+      if (legacyRaw){
+        const legacy = JSON.parse(legacyRaw);
+        if (validSave(legacy)){
+          legacy.id = legacy.id || ('save-'+Date.now().toString(36));
+          legacy.name = legacy.name || 'Imported save';
+          saves.push(legacy);
+          writeSaveList(saves);
+        }
+        localStorage.removeItem(LEGACY_SAVE_KEY);
+      }
+    }
+    return saves.sort((a,b)=>String(b.savedAt||'').localeCompare(String(a.savedAt||'')));
+  } catch (err) {
+    return [];
+  }
+}
+function highestUid(savedState){
+  let high = 0;
+  for (const p of savedState.players || []){
+    for (const c of [...(p.hand || []), ...(p.tab || [])]) high = Math.max(high, Number(c.uid)||0);
+  }
+  return high;
+}
+function saveCurrentGame(name){
+  if (!safeSavePoint()) return {ok:false, reason:'Game is not at a safe save point.'};
+  const cleanName = String(name || '').trim().replace(/\s+/g,' ').slice(0,40);
+  if (!cleanName) return {ok:false, reason:'Enter a name for this save.'};
+  const saves = readSaveList();
+  const existing = saves.find(x=>String(x.name||'').toLowerCase()===cleanName.toLowerCase());
+  state.rules=normalizeRules(state.rules);
+  const payload = {
+    id: existing ? existing.id : ('save-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)),
+    name:cleanName,
+    version:2,
+    savedAt:new Date().toISOString(),
+    uid:_uid,
+    state,
+    logHTML:$('log').innerHTML
+  };
+  const next = existing ? saves.map(x=>x.id===existing.id ? payload : x) : [payload, ...saves];
+  return writeSaveList(next)
+    ? {ok:true, updated:!!existing, save:payload}
+    : {ok:false, reason:'The save could not be stored in this browser.'};
+}
+function loadSavedGame(id){
+  const save = readSaveList().find(x=>x.id===id);
+  if (!save) return false;
+  state = hydrateState(save.state);
+  _uid = Math.max(Number(save.uid)||1, highestUid(state)+1);
+  $('log').innerHTML = save.logHTML || '';
+  $('modalRoot').innerHTML = '';
+  render();
+  if (!(cur().isHuman && (state.phase==='turnStart' || state.phase==='action'))){
+    state.phase = 'idle';
+    setTimeout(runTurn, 60);
+  }
+  return true;
+}
+function deleteSavedGame(id){
+  const saves = readSaveList();
+  const next = saves.filter(x=>x.id!==id);
+  if (next.length===saves.length) return false;
+  return writeSaveList(next);
+}
+function readSettings(){
+  try {
+    let raw=localStorage.getItem(SETTINGS_KEY);
+    if (!raw){
+      raw=localStorage.getItem(LEGACY_SETTINGS_KEY);
+      if (raw) localStorage.removeItem(LEGACY_SETTINGS_KEY);
+    }
+    const value = JSON.parse(raw || '{}');
+    return {
+      theme:THEMES[value.theme] ? value.theme : 'classic',
+      gameDefaults:normalizeRules(value.gameDefaults)
+    };
+  } catch (err) {
+    return {theme:'classic',gameDefaults:normalizeRules()};
+  }
+}
+function writeSettings(next){
+  try { localStorage.setItem(SETTINGS_KEY,JSON.stringify(next)); return true; }
+  catch(err){ return false; }
+}
+function applyTheme(theme){
+  const current=readSettings();
+  const key = THEMES[theme] ? theme : 'classic';
+  document.documentElement.dataset.theme = key;
+  writeSettings({theme:key,gameDefaults:current.gameDefaults});
+  return key;
+}
+function saveGameDefaults(rules){
+  const current=readSettings();
+  return writeSettings({theme:current.theme,gameDefaults:normalizeRules(rules)});
+}
+applyTheme(readSettings().theme);
 
 /* ================= Log ================= */
 function log(msg, cls){
@@ -440,9 +728,22 @@ function cardHTMLv(c, opts){
 function hoursBadge(p){
   return '<span class="hours-badge'+(p.hours<0?' neg':'')+'">'+p.hours+' h</span>';
 }
+function endConditionText(rules){
+  if (rules.endType==='goal') return 'Goal: '+rules.goalHours+'h';
+  if (rules.endType==='deck') return 'Finite deck: '+rules.deckSize+' cards';
+  return rules.roundCount+' rounds';
+}
 function render(){
   if (!state) return;
-  $('roundStamp').textContent = 'ROUND ' + String(Math.min(state.round,state.maxRounds)).padStart(2,'0') + ' / ' + state.maxRounds;
+  const rules=gameRules();
+  if (rules.endType==='rounds'){
+    $('roundStamp').textContent = 'ROUND ' + String(Math.min(state.round,rules.roundCount)).padStart(2,'0') + ' / ' + rules.roundCount;
+  } else if (rules.endType==='goal'){
+    $('roundStamp').textContent = 'ROUND ' + String(state.round).padStart(2,'0') + ' · GOAL ' + rules.goalHours+'H';
+  } else {
+    $('roundStamp').textContent = 'ROUND ' + String(state.round).padStart(2,'0') + ' · DECK ' + ((state.deck||[]).length);
+  }
+  $('drawCount').textContent = rules.endType==='deck' ? String((state.deck||[]).length) : '∞';
   const p0 = state.players[0];
   const top = state.discard[state.discard.length-1];
   $('discardPile').innerHTML = '<span>Discard · '+state.discard.length+'</span><b>'+(top?top:'—')+'</b>';
@@ -472,26 +773,33 @@ function render(){
   const supp0 = p0.tab.some(c=>DEFS[c.key].t==='weapon');
   $('myDeskMeta').textContent = supp0 ? '⚠ a weapon on your desk is freezing unprotected non-weapon cards' : '';
   let dh = '';
-  const canAct = state.phase==='action' && cur()===p0;
+  const normalAction = state.phase==='action' && cur()===p0;
   for (const c of p0.tab)
-    dh += cardHTMLv(c,{inPlay:true, click:canAct, attr:'data-tab="'+c.uid+'"', suppressed:supp0 && DEFS[c.key].t!=='weapon' && !c.nepo && !c.ext});
+    dh += cardHTMLv(c,{inPlay:true, click:normalAction, attr:'data-tab="'+c.uid+'"', suppressed:supp0 && DEFS[c.key].t!=='weapon' && !c.nepo && !c.ext});
   for (let i=p0.tab.length;i<3;i++) dh += '<div class="slot-empty">EMPTY SLOT</div>';
   $('myDesk').innerHTML = dh;
 
   // my hand
   let hh = '';
-  for (const c of p0.hand)
-    hh += cardHTMLv(c,{click:canAct, drawn:c.uid===state.justDrawn, attr:'data-hand="'+c.uid+'"'});
+  for (const c of p0.hand){
+    const freeHelper = rules.helpersAnyTime && DEFS[c.key].t==='helper' && !state.over && state.phase!=='busy';
+    hh += cardHTMLv(c,{click:normalAction || freeHelper, drawn:c.uid===state.justDrawn, attr:'data-hand="'+c.uid+'"'});
+  }
   if (!p0.hand.length) hh = '<div class="slot-empty" style="width:100%">EMPTY HAND</div>';
   $('myHand').innerHTML = hh;
-  $('myHandMeta').textContent = p0.hand.length + ' card' + (p0.hand.length===1?'':'s');
+  $('myHandMeta').textContent = p0.hand.length + ' card' + (p0.hand.length===1?'':'s') + (rules.helpersAnyTime?' · helpers free anytime':'');
 
   // action bar
-  $('drawBtn').disabled = !(state.phase==='turnStart' && cur()===p0 && !state.over);
-  $('skipBtn').disabled = $('drawBtn').disabled;
+  const deckEmpty = rules.endType==='deck' && !(state.deck||[]).length;
+  $('drawBtn').textContent = deckEmpty ? 'No cards left' : 'Punch in & draw';
+  $('drawBtn').disabled = !(state.phase==='turnStart' && cur()===p0 && !state.over && !deckEmpty);
+  const noDrawAction = state.phase==='action' && cur()===p0 && deckEmpty && !state.justDrawn;
+  $('skipBtn').disabled = !(state.phase==='turnStart' && cur()===p0 && !state.over) && !noDrawAction;
+  $('menuBtn').disabled = !safeSavePoint();
   if (state.over) $('hint').innerHTML = 'Game over — see final timesheet.';
-  else if (cur()!==p0) $('hint').innerHTML = B(cur().name)+' is taking their turn…';
+  else if (cur()!==p0) $('hint').innerHTML = B(cur().name)+' is taking their turn…'+(rules.helpersAnyTime?' You may still use a helper.':'');
   else if (state.phase==='turnStart') $('hint').innerHTML = 'Your turn: '+B('draw a card')+' (then take one action) or '+B('skip')+'.';
+  else if (noDrawAction) $('hint').innerHTML = 'The draw pile is empty. Play or discard '+B('one card')+', or skip.';
   else if (state.phase==='action') $('hint').innerHTML = 'Take '+B('one action')+': click a hand card to play/use/toss it, or click a desk card to discard &amp; settle it.';
 }
 
@@ -525,7 +833,14 @@ async function expireCard(p, c, cause, bypassHelpers){
   const lost = c.tokens; c.tokens = 0;
   let msg = B(p.name)+"'s "+B(d.name)+' expired ('+cause+')';
   if (lost>0) msg += ' — '+lost+'h on it are lost';
-  if (d.neg && cause!=='voided'){ p.hours -= d.neg; msg += ' and '+p.name+' pays the '+d.neg+'h cost'; }
+  if (c.key==='parasite' && c.attacker!==null && cause!=='voided'){
+    p.hours -= 4;
+    byId(c.attacker).hours += 4;
+    msg += ' and resets, paying '+byId(c.attacker).name+' the full 4h';
+  } else if (d.neg && cause!=='voided'){
+    p.hours -= d.neg;
+    msg += ' and '+p.name+' pays the '+d.neg+'h cost';
+  }
   log(msg+'.', 'bad');
   render();
   // Sharing voids: any sharing owned by p, or linked to p, dies too
@@ -538,41 +853,55 @@ async function expireCard(p, c, cause, bypassHelpers){
   }
 }
 /* Voluntary / forced discard of an in-play card. Returns after settling. */
-async function settleDiscard(p, c, how, voided){
+async function settleDiscard(p, c, how, voided, resetValue){
   if (!p.tab.includes(c)) return;
   p.tab.splice(p.tab.indexOf(c),1);
   state.discard.push(DEFS[c.key].name);
   const d = DEFS[c.key];
   if (voided){
     log(B(p.name)+"'s "+B(d.name)+' is voided'+(c.tokens?(' — '+c.tokens+'h lost'):'')+' ('+how+').', 'bad');
+  } else if (c.key==='parasite' && c.attacker!==null){
+    const amount = resetValue ? 4 : Math.max(0, 4 - c.transfers);
+    if (amount>0){
+      p.hours -= amount;
+      byId(c.attacker).hours += amount;
+      log(B(p.name)+' discards '+B('Parasite')+' and pays '+byId(c.attacker).name+' '+(resetValue?'the reset full ':'the remaining ')+amount+'h ('+how+').', 'bad');
+    } else {
+      log(B(p.name)+' discards the spent '+B('Parasite')+' ('+how+').');
+    }
   } else if (c.owed > 0){
     log(B(p.name)+' discards '+B(d.name)+' early, forfeiting the '+c.owed+'h still owed ('+how+').', 'bad');
   } else {
     let banked = c.tokens;
     if (c.key==='professional' && c.age>=8 && c.age<=lifespan(c)) banked += 10;
-    if (c.key==='parasite' && c.attacker!==null){
-      const remain = Math.max(0, 4 - c.transfers);
-      if (remain>0){
-        p.hours -= remain; byId(c.attacker).hours += remain;
-        log(B(p.name)+' discards '+B('Parasite')+' and pays '+byId(c.attacker).name+' the remaining '+remain+'h.', 'bad');
-      } else log(B(p.name)+' discards the spent '+B('Parasite')+'.');
-    } else {
-      p.hours += banked;
-      log(B(p.name)+' discards '+B(d.name)+(banked>0?(' and banks '+B('+'+banked+'h')):'')+' ('+how+').', banked>0?'good':'');
-    }
+    p.hours += banked;
+    log(B(p.name)+' discards '+B(d.name)+(banked>0?(' and banks '+B('+'+banked+'h')):'')+' ('+how+').', banked>0?'good':'');
+  }
+  if (!voided && resetValue && d.neg){
+    p.hours -= d.neg;
+    log(B(d.name)+' resets to its printed value, charging '+B(p.name)+' '+B('−'+d.neg+'h')+'.', 'bad');
   }
   c.tokens = 0;
   render();
 }
 /* Excused reaction. Returns true if blocked. */
+async function weaponNotice(target, weaponName, attacker, detail){
+  if (!target.isHuman || !gameRules().notifyEvents) return;
+  await notify('Incoming: '+weaponName,
+    (attacker?attacker.name:'The office')+' played '+B(weaponName)+' on you.'+(detail?' '+detail:''));
+}
 async function tryExcused(target, weaponName, attacker){
-  const ex = target.hand.find(c=>c.key==='excused');
-  if (!ex) return false;
+  const canReact=gameRules().helpersAnyTime;
+  const ex = canReact ? target.hand.find(c=>c.key==='excused') : null;
+  if (!ex){
+    await weaponNotice(target,weaponName,attacker,canReact?'':' Helpers are restricted to your own turn.');
+    return false;
+  }
   let block;
   if (target.isHuman){
     block = await modal({
       title:'Incoming: '+weaponName,
-      body:(attacker?attacker.name:'The office')+' is hitting you with '+B(weaponName)+'. You hold an '+B('Excused')+' — use it to cancel? (Free — doesn\u2019t cost your turn.)',
+      body:(attacker?attacker.name:'The office')+' is hitting you with '+B(weaponName)+'. You hold an '+B('Excused')+' — use it to cancel? (Free under this game’s helper setting.)',
       choices:[
         {label:'Use Excused — cancel it', value:true},
         {label:'Take the hit, keep Excused', value:false, danger:true},
@@ -685,6 +1014,7 @@ async function execTardy(actor, owner, card){
     state.discard.push('Tardy');
     const helper = card.nepo ? 'Nepotism' : 'Extension';
     log(B(owner.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B(helper)+' — Tardy has no effect.', 'good');
+    await weaponNotice(owner,'Tardy',actor,helper+' blocked it.');
     render();
     return;
   }
@@ -700,6 +1030,7 @@ async function execDeadline(actor, owner, card){
     state.discard.push('Deadline');
     const helper = card.nepo ? 'Nepotism' : 'Extension';
     log(B(owner.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B(helper)+' — Deadline has no effect.', 'good');
+    await weaponNotice(owner,'Deadline',actor,helper+' blocked it.');
     render();
     return;
   }
@@ -722,6 +1053,7 @@ async function execQuit(actor, target, zone, card){
     state.discard.push('Quit');
     const helper = card.nepo ? 'Nepotism' : 'Extension';
     log(B(target.name)+"'s "+B(DEFS[card.key].name)+' is protected by '+B(helper)+' — Quit has no effect.', 'good');
+    await weaponNotice(target,'Quit',actor,helper+' blocked it.');
     render();
     return;
   }
@@ -732,7 +1064,7 @@ async function execQuit(actor, target, zone, card){
     const gone = target.hand[rint(target.hand.length)];
     binFromHand(target, gone, 'forced by '+actor.name+"'s Quit");
     target.refill = true;
-    log(B(target.name)+' will refill to 5 cards next turn.');
+    log(B(target.name)+' will refill toward '+gameRules().startingHandSize+' cards next turn.');
   } else {
     await settleDiscard(target, card, 'forced out by Quit', true);
     log(B(actor.name)+"'s "+B('Quit')+' voided that card outright.', 'bad');
@@ -755,28 +1087,57 @@ async function execFX(actor, target){
 
 /* ================= Alerts ================= */
 async function resolveAlert(p, key){
-  state.discard.push(DEFS[key].name);
-  log('🚨 '+B(p.name)+' draws an ALERT: '+B(DEFS[key].name)+'!', 'alert');
-  if (p.isHuman) await notify('ALERT: '+DEFS[key].name, DEFS[key].txt+' This resolves immediately and uses your whole turn.');
+  const d=DEFS[key];
+  const rules=gameRules();
+  state.discard.push(d.name);
+  log('🚨 '+B(p.name)+' draws an ALERT: '+B(d.name)+'!', 'alert');
+  if (rules.notifyEvents){
+    await notify((p.isHuman?'You drew ':'Alert drawn: ')+d.name,
+      (p.isHuman?'You':p.name)+' drew '+B(d.name)+'. '+d.txt+' This resolves immediately and uses the turn.');
+  }
+  const protectedByAlertRule=c=>rules.helpersBlockAlerts && hasAttachedHelper(c);
   if (key==='fired'){
-    for (const c of [...p.tab]) await settleDiscard(p, c, 'Fired! alert');
+    for (const c of [...p.tab]){
+      if (protectedByAlertRule(c)){
+        log(B(p.name)+"'s "+B(DEFS[c.key].name)+' is protected from Fired! by its helper.', 'good');
+        continue;
+      }
+      await settleDiscard(p, c, 'Fired! alert', false, true);
+    }
   } else if (key==='recession'){
-    for (const q of state.players)
-      for (const c of [...q.tab]) await settleDiscard(q, c, 'Recession alert');
+    for (const q of state.players){
+      for (const c of [...q.tab]){
+        if (protectedByAlertRule(c)){
+          log(B(q.name)+"'s "+B(DEFS[c.key].name)+' is protected from Recession by its helper.', 'good');
+          continue;
+        }
+        await settleDiscard(q, c, 'Recession alert', false, true);
+      }
+    }
   } else if (key==='amnesia'){
     for (const q of state.players){
       for (const c of q.tab){
-        const d = DEFS[c.key];
+        if (protectedByAlertRule(c)){
+          log(B(q.name)+"'s "+B(DEFS[c.key].name)+' is protected from Amnesia by its helper.', 'good');
+          continue;
+        }
+        const cardDef = DEFS[c.key];
         c.tokens = 0; c.age = 0; c.ext = 0; c.nepo = false; c.transfers = 0;
-        if (d.neg){ q.hours -= (d.neg - c.owed); c.owed = d.neg; }
+        if (cardDef.neg){ q.hours -= (cardDef.neg - c.owed); c.owed = cardDef.neg; }
       }
     }
-    log('Everyone\u2019s cards reset to freshly played — earnings gone, costs re-charged.', 'alert');
+    log('Unprotected cards reset to freshly played — earnings gone, costs re-charged.', 'alert');
   } else if (key==='performanceReview'){
-    log(B(p.name)+' must dump their whole hand — costs are charged, but no card effects trigger.', 'alert');
+    log(B(p.name)+' must dump their whole hand — printed up-front hour values follow this game’s discard setting; special functions do not trigger.', 'alert');
     for (const c of [...p.hand]) binFromHand(p, c, 'Performance Review');
-    while (p.hand.length < 5) p.hand.push(makeCard(drawKey(false)));
-    log(B(p.name)+' redraws to 5 cards.');
+    const target=rules.startingHandSize;
+    let n=0;
+    while (p.hand.length < target){
+      const draw=drawCardKey(false);
+      if (!draw) break;
+      p.hand.push(makeCard(draw)); n++;
+    }
+    log(B(p.name)+' redraws '+n+' card'+(n===1?'':'s')+' toward a '+target+'-card hand.');
   }
   render();
 }
@@ -801,7 +1162,7 @@ async function chooseQuitZone(actor, target){
   const choices = target.tab.map(c=>({
     label:'Void their '+DEFS[c.key].name,
     sub:'R'+c.age+'/'+lifespan(c)+(c.owed>0?(' · owes '+c.owed+'h'):(' · '+c.tokens+'h on it')), value:c.uid}));
-  choices.push({label:'A random card from their hand', sub:'They refill to 5 next turn', value:'hand'});
+  choices.push({label:'A random card from their hand', sub:'They refill toward '+gameRules().startingHandSize+' next turn', value:'hand'});
   const v = await modal({title:'Quit — pick the damage', body:'What must '+target.name+' discard? (It is voided — no effects, no banking.)', choices});
   return v==='hand' ? {zone:'hand'} : {zone:'tab', card:target.tab.find(c=>c.uid===v)};
 }
@@ -893,7 +1254,11 @@ async function useHandCard(p, c, plan){
       removeFromHand(); state.discard.push('Newbie');
       log(B(p.name)+' plays '+B('Newbie')+' — dead hand, five fresh cards.');
       for (const x of [...p.hand]) binFromHand(p, x, 'Newbie redraw');
-      for (let i=0;i<5;i++) p.hand.push(makeCard(drawKey(false)));
+      for (let i=0;i<gameRules().startingHandSize;i++){
+        const draw=drawCardKey(false);
+        if (!draw) break;
+        p.hand.push(makeCard(draw));
+      }
       break;
     }
     case 'excused': {
@@ -933,9 +1298,11 @@ function binFromHand(p, c, why){
   if (i>=0) p.hand.splice(i,1);
   const d = DEFS[c.key];
   state.discard.push(d.name);
-  if (d.neg){
+  if (d.neg && gameRules().discardNegativeFromHand){
     p.hours -= d.neg;
-    log(B(p.name)+' discards '+B(d.name)+' from hand — played &amp; binned, paying its '+B('−'+d.neg+'h')+' cost ('+why+').', 'bad');
+    log(B(p.name)+' discards '+B(d.name)+' from hand — its printed value activates for '+B('−'+d.neg+'h')+(why?' ('+why+')':'')+'.', 'bad');
+  } else if (d.neg){
+    log(B(p.name)+' discards '+B(d.name)+' from hand with no hour effect'+(why?' ('+why+')':'')+'.');
   } else {
     log(B(p.name)+' discards '+d.name+' from hand (no effect'+(why?(' — '+why):'')+').');
   }
@@ -946,30 +1313,75 @@ function tossHandCard(p, c){
 }
 
 /* ================= Turn engine ================= */
-function startGame(rounds){
-  state = newState(rounds);
+function endReasonNow(){
+  const rules=gameRules();
+  if (rules.endType==='goal'){
+    const hit=state.players.find(p=>p.hours>=rules.goalHours);
+    if (hit) return hit.name+' reached the '+rules.goalHours+'h goal';
+  }
+  if (rules.endType==='deck' && !(state.deck||[]).length && state.players.every(p=>p.hand.length===0)){
+    return 'all cards in the finite deck have been played or discarded';
+  }
+  return '';
+}
+function drawToHandSize(p, why){
+  const target=gameRules().startingHandSize;
+  let n=0;
+  while (p.hand.length<target){
+    const key=drawCardKey(false);
+    if (!key) break;
+    p.hand.push(makeCard(key)); n++;
+  }
+  if (n && why) log(B(p.name)+' draws '+n+' card'+(n===1?'':'s')+' '+why+'.');
+  return n;
+}
+async function aiUseFreeHelpers(p){
+  if (!gameRules().helpersAnyTime) return;
+  for (let guard=0;guard<6;guard++){
+    const find=k=>p.hand.find(x=>x.key===k);
+    const ex=find('excused');
+    const deskWeapon=p.tab.find(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
+    if (ex && deskWeapon){ await useHandCard(p,ex,{cardTarget:{owner:p,card:deskWeapon}}); continue; }
+    const ext=find('extension');
+    const save=ext && p.tab.find(x=>x.owed===0 && x.tokens>=3 && x.age>=lifespan(x)-1 && !x.nepo);
+    if (ext && save){ await useHandCard(p,ext,{cardTarget:{owner:p,card:save}}); continue; }
+    const nep=find('nepotism');
+    const keep=nep && p.tab.find(x=>x.owed===0 && x.tokens>=4 && !x.nepo);
+    if (nep && keep){ await useHandCard(p,nep,{cardTarget:{owner:p,card:keep}}); continue; }
+    const nb=find('newbie');
+    if (nb && p.hand.length>=Math.max(7,gameRules().startingHandSize+2) && !p.hand.some(x=>DEFS[x.key].t==='play')){
+      await useHandCard(p,nb); continue;
+    }
+    break;
+  }
+}
+function startGame(ruleInput){
+  state = newState(ruleInput);
   state.justDrawn = null;
   $('log').innerHTML = '';
-  for (const p of state.players)
-    for (let i=0;i<5;i++) p.hand.push(makeCard(drawKey(false)));
-  log('Doors open. Everyone starts with '+B('10 hours')+' and 5 cards. '+B(state.maxRounds+' rounds')+' on the clock.');
+  for (const p of state.players) drawToHandSize(p);
+  const rules=gameRules();
+  log('Doors open. Everyone starts with '+B('10 hours')+' and '+B(rules.startingHandSize+' cards')+'. End condition: '+B(endConditionText(rules))+'.');
   render();
   setTimeout(runTurn, 60);
 }
 async function runTurn(){
-  if (state.over) return;
+  if (state.over || state.finishing) return;
   const p = cur();
   state.justDrawn = null;
   if (p.refill){
     p.refill = false;
-    let n = 0;
-    while (p.hand.length < 5){ p.hand.push(makeCard(drawKey(false))); n++; }
-    if (n) log(B(p.name)+' refills '+n+' card'+(n===1?'':'s')+' after Quit.');
+    const n=drawToHandSize(p,'after Quit');
+    if (!n && p.hand.length<gameRules().startingHandSize) log(B(p.name)+' cannot fully refill because no eligible cards remain.');
   }
+  if (!p.isHuman) await aiUseFreeHelpers(p);
   await agingPhase(p);
+  const reason=endReasonNow();
+  if (reason){ await finishGame(reason); return; }
   if (state.over) return;
+  const deckEmpty=gameRules().endType==='deck' && !(state.deck||[]).length;
   if (p.isHuman){
-    state.phase = 'turnStart';
+    state.phase = deckEmpty ? 'action' : 'turnStart';
     render();
   } else {
     state.phase = 'idle';
@@ -981,24 +1393,34 @@ async function runTurn(){
 }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function endTurn(){
+  if (!state || state.over || state.finishing) return;
   state.phase = 'idle';
   state.justDrawn = null;
+  const immediate=endReasonNow();
+  if (immediate){ finishGame(immediate); return; }
   state.turnIdx++;
   if (state.turnIdx >= state.players.length){
     state.turnIdx = 0;
-    if (state.round >= state.maxRounds){ finishGame(); return; }
+    const rules=gameRules();
+    if (rules.endType==='rounds' && state.round >= rules.roundCount){
+      finishGame('the '+rules.roundCount+'-round limit was reached');
+      return;
+    }
     state.round++;
     log('— punch clock rolls to '+B('round '+state.round)+' —');
   }
   render();
   setTimeout(runTurn, AI_DELAY? Math.min(AI_DELAY,400) : 1);
 }
-async function finishGame(){
+async function finishGame(reason){
+  if (!state || state.finishing || state.over) return;
+  state.finishing=true;
   state.over = true;
-  log('🔔 '+B('Closing time.')+' Cards still in play settle as if discarded.', 'alert');
+  log('🔔 '+B('Closing time.')+(reason?' '+reason.charAt(0).toUpperCase()+reason.slice(1)+'.':'')+' Cards still in play settle as if discarded.', 'alert');
   for (const p of state.players){
     for (const c of [...p.tab]) await settleDiscard(p, c, 'end-of-game settlement');
   }
+  state.finishing=false;
   render();
   const sorted = state.players.slice().sort((a,b)=>b.hours-a.hours);
   const top = sorted[0].hours;
@@ -1015,12 +1437,19 @@ async function finishGame(){
     body:'<span class="promo-stamp">'+title+'</span><table class="final-table"><tr><th></th><th>Employee</th><th>Hours</th></tr>'+rows+'</table>' +
       (winners.length>1 ? 'Tie at the top — the win is shared.' : B(winners[0].name)+' logged the most hours.'),
     choices:[{label:'Play again', value:true},{label:'Close', value:false}]});
-  if (again) showStart();
+  if (again) showStart(false);
 }
 
 /* ================= Human turn actions ================= */
+$('menuBtn').onclick = () => {
+  if (!safeSavePoint()) return;
+  showStart(true);
+};
 $('skipBtn').onclick = () => {
-  if (state.phase!=='turnStart' || !cur().isHuman) return;
+  if (!state || !cur().isHuman) return;
+  const deckEmpty=gameRules().endType==='deck' && !(state.deck||[]).length;
+  const canSkip=state.phase==='turnStart' || (state.phase==='action' && deckEmpty && !state.justDrawn);
+  if (!canSkip) return;
   log(B('You')+' skip the turn (cards still aged).');
   endTurn();
 };
@@ -1028,7 +1457,12 @@ $('drawBtn').onclick = async () => {
   if (state.phase!=='turnStart' || !cur().isHuman) return;
   const p = cur();
   state.phase = 'busy';
-  const key = drawKey(true);
+  const key = drawCardKey(true);
+  if (!key){
+    state.phase='action';
+    render();
+    return;
+  }
   if (DEFS[key].t==='alert'){
     render();
     await resolveAlert(p, key);
@@ -1044,13 +1478,17 @@ $('drawBtn').onclick = async () => {
 };
 document.addEventListener('click', async (ev)=>{
   const t = ev.target.closest('[data-hand],[data-tab]');
-  if (!t || !state || state.phase!=='action' || !cur().isHuman) return;
+  if (!t || !state || state.over || state.phase==='busy') return;
   const p = state.players[0];
   if (t.dataset.hand){
     const c = p.hand.find(x=>x.uid==t.dataset.hand);
     if (!c) return;
-    await handCardMenu(p, c);
+    const normalAction=cur()===p && state.phase==='action';
+    const freeHelper=gameRules().helpersAnyTime && DEFS[c.key].t==='helper';
+    if (!normalAction && !freeHelper) return;
+    await handCardMenu(p, c, {normalAction,freeHelper});
   } else if (t.dataset.tab){
+    if (!(cur()===p && state.phase==='action')) return;
     const c = p.tab.find(x=>x.uid==t.dataset.tab);
     if (!c) return;
     const pv = bankPreview(c);
@@ -1064,47 +1502,70 @@ document.addEventListener('click', async (ev)=>{
     if (v){ state.phase='busy'; await settleDiscard(p, c, 'your call'); endTurn(); }
   }
 });
-async function handCardMenu(p, c){
+async function handCardMenu(p, c, context){
+  context=context||{};
   const d = DEFS[c.key];
+  const freeHelper=!!(context.freeHelper && d.t==='helper');
+  const normalAction=!!context.normalAction;
   const choices = [];
+  const timing=freeHelper ? 'Free helper use; your normal turn remains available' : 'Counts as your action';
   if (d.t==='play'){
-    if (p.tab.length < 3) choices.push({label:'Play it on your desk', sub:d.neg?('Costs '+d.neg+'h up front'):'Starts earning next round', value:'play'});
+    if (p.tab.length < 3) choices.push({label:'Play it on your desk', sub:(d.neg?('Costs '+d.neg+'h up front'):'Starts earning next round')+' · '+timing, value:'play'});
     else choices.push({label:'(Desk is full — can\u2019t play it)', sub:'Discard a desk card on a future turn to make room', value:null});
   } else if (d.t==='weapon'){
-    choices.push({label:(d.sub==='imm'?'Use it':'Play it on an opponent'), sub:d.txt, value:'play'});
+    choices.push({label:(d.sub==='imm'?'Use it':'Play it on an opponent'), sub:d.txt+' · '+timing, value:'play'});
   } else if (c.key==='excused'){
     const inPlayWeapons = p.tab.filter(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
     if (inPlayWeapons.length)
-      choices.push({label:'Discard a weapon from your desk', sub:'Cancels an unprotected weapon’s remaining effect; counts as your action', value:'play'});
+      choices.push({label:'Discard a weapon from your desk', sub:'Cancels an unprotected weapon’s remaining effect · '+timing, value:'play'});
     else
-      choices.push({label:'(No removable weapon on your desk)', sub:'Protected weapons remain protected; Excused will still cancel an incoming weapon', value:null});
+      choices.push({label:'(No removable weapon on your desk)', sub:gameRules().helpersAnyTime?'Excused can still react to an incoming weapon':'Excused can be used on your turn after a weapon lands', value:null});
   } else {
-    choices.push({label:'Use it', sub:d.txt, value:'play'});
+    choices.push({label:'Use it', sub:d.txt+' · '+timing, value:'play'});
   }
-  choices.push({label:'Toss it (no effect)', sub:'Counts as your action', value:'toss', danger:true});
+  if (normalAction) choices.push({label:'Toss it (no special function)', sub:'Counts as your action; printed negative value follows this game’s setting', value:'toss', danger:true});
   choices.push({label:'Cancel', value:'cancel'});
   const v = await modal({title:d.name, body:d.txt, choices});
   if (v==='cancel' || v===null) return;
+  const priorPhase=state.phase;
   state.phase = 'busy';
-  if (v==='toss'){ tossHandCard(p, c); endTurn(); return; }
+  if (v==='toss'){
+    tossHandCard(p, c);
+    endTurn();
+    return;
+  }
   const ok = await useHandCard(p, c);
-  if (!ok){ state.phase='action'; render(); return; }
+  if (!ok){ state.phase=priorPhase; render(); return; }
+  if (freeHelper){
+    state.phase=priorPhase;
+    render();
+    const reason=endReasonNow();
+    if (reason) finishGame(reason);
+    return;
+  }
   endTurn();
 }
 
 /* ================= AI ================= */
 async function aiTurn(p){
-  // must draw (skipping is almost never right when tossing is free)
-  const key = drawKey(true);
-  if (DEFS[key].t==='alert'){ await resolveAlert(p, key); return; }
-  const c = makeCard(key);
-  p.hand.push(c);
-  log(B(p.name)+' draws a card.');
-  render();
-  await sleep(AI_DELAY/2);
+  const rules=gameRules();
+  const key = drawCardKey(true);
+  if (key){
+    if (DEFS[key].t==='alert'){ await resolveAlert(p, key); return; }
+    const c = makeCard(key);
+    p.hand.push(c);
+    log(B(p.name)+' draws a card.');
+    render();
+    await sleep(AI_DELAY/2);
+    await aiUseFreeHelpers(p);
+  } else {
+    log(B(p.name)+' has no card left to draw.');
+  }
 
   const L = leaderOf(p);
-  const roundsLeft = state.maxRounds - state.round + 1;
+  const roundsLeft = rules.endType==='rounds'
+    ? rules.roundCount - state.round + 1
+    : (rules.endType==='deck' ? Math.max(2,Math.ceil(((state.deck||[]).length+p.hand.length)/state.players.length)) : 10);
   const find = k => p.hand.find(x=>x.key===k);
 
   // 1) bank ripe desk cards
@@ -1139,7 +1600,7 @@ async function aiTurn(p){
   if (sc && L.hours>=1){ await useHandCard(p, sc, {target:L}); return; }
   const td = find('tardy');
   if (td){
-    const forceOut = L.tab.find(x=>x.age>=lifespan(x)-0 && x.tokens>=1 && !x.nepo && !x.ext) ||
+    const forceOut = L.tab.find(x=>x.age>=lifespan(x) && x.tokens>=1 && !x.nepo && !x.ext) ||
                      L.tab.find(x=>x.age===lifespan(x)-1 && x.tokens>=3 && !x.nepo && !x.ext);
     if (forceOut){ await useHandCard(p, td, {cardTarget:{owner:L, card:forceOut}}); return; }
   }
@@ -1154,26 +1615,26 @@ async function aiTurn(p){
     if (find('sharing') && roundsLeft>=3) prefs.push(find('sharing'));
     if (prefs.length){ await useHandCard(p, prefs[0], {target:L}); return; }
   }
-  // 5) helpers
-  const ex = find('excused');
-  const deskWeapon = p.tab.find(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
-  if (ex && deskWeapon){
-    await useHandCard(p, ex, {cardTarget:{owner:p, card:deskWeapon}}); return;
-  }
-  const ext = find('extension');
-  if (ext){
-    const save = p.tab.filter(x=>x.owed===0 && x.tokens>=3 && x.age>=lifespan(x)-1 && !x.nepo)[0];
-    if (save){ await useHandCard(p, ext, {cardTarget:{owner:p, card:save}}); return; }
-  }
-  const nep = find('nepotism');
-  if (nep){
-    const keep = p.tab.filter(x=>x.owed===0 && x.tokens>=4 && !x.nepo)[0];
-    if (keep){ await useHandCard(p, nep, {cardTarget:{owner:p, card:keep}}); return; }
-  }
-  const nb = find('newbie');
-  if (nb && p.hand.length>=7 &&
-      !p.hand.some(x=>DEFS[x.key].t==='play') ){
-    await useHandCard(p, nb); return;
+
+  // 5) helpers consume the turn only in turn-only mode
+  if (!rules.helpersAnyTime){
+    const ex = find('excused');
+    const deskWeapon = p.tab.find(x=>DEFS[x.key].t==='weapon' && !x.nepo && !x.ext);
+    if (ex && deskWeapon){ await useHandCard(p, ex, {cardTarget:{owner:p, card:deskWeapon}}); return; }
+    const ext = find('extension');
+    if (ext){
+      const save = p.tab.find(x=>x.owed===0 && x.tokens>=3 && x.age>=lifespan(x)-1 && !x.nepo);
+      if (save){ await useHandCard(p, ext, {cardTarget:{owner:p, card:save}}); return; }
+    }
+    const nep = find('nepotism');
+    if (nep){
+      const keep = p.tab.find(x=>x.owed===0 && x.tokens>=4 && !x.nepo);
+      if (keep){ await useHandCard(p, nep, {cardTarget:{owner:p, card:keep}}); return; }
+    }
+    const nb = find('newbie');
+    if (nb && p.hand.length>=Math.max(7,rules.startingHandSize+2) && !p.hand.some(x=>DEFS[x.key].t==='play')){
+      await useHandCard(p, nb); return;
+    }
   }
 
   // 6) desk clogged? cash out the best paid-off card to free a slot
@@ -1182,36 +1643,196 @@ async function aiTurn(p){
                       .sort((a,b)=>bankPreview(b)-bankPreview(a))[0];
     if (cash){ await settleDiscard(p, cash, 'freeing up the desk'); return; }
   }
+
   // 7) fallback: toss the least useful card
+  if (!p.hand.length){
+    log(B(p.name)+' has no card to play and takes no action.');
+    return;
+  }
   const tossOrder = ['foreignExchange','tardy','nepotism','extension','newbie','sharing','risky','professional','stockMarket','parasite','quit','scammer','deadline','unpredictable','onTheClock','excused'];
   const toss = p.hand.slice().sort((a,b)=>tossOrder.indexOf(a.key)-tossOrder.indexOf(b.key))[0];
-  // prefer tossing an unplayable play card if desk full
   const stuckPlay = p.tab.length>=3 ? p.hand.find(x=>DEFS[x.key].t==='play') : null;
   tossHandCard(p, stuckPlay || toss);
 }
 
-/* ================= Start screen ================= */
-async function showStart(){
+/* ================= Start screen / save menu ================= */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[ch]);
+}
+function ruleSummary(rules){
+  const r=normalizeRules(rules);
+  const parts=[endConditionText(r),r.startingHandSize+'-card hands'];
+  parts.push(r.helpersAnyTime?'helpers free anytime':'helpers use the turn');
+  parts.push(r.helpersBlockAlerts?'helpers block Alerts':'Alerts bypass helpers');
+  return parts.join(' · ');
+}
+function saveRowsHTML(saves){
+  if (!saves.length) return '<div class="save-empty">No named saves yet.</div>';
+  return saves.map(save=>{
+    const date = save.savedAt ? new Date(save.savedAt).toLocaleString() : 'Unknown date';
+    const rules=normalizeRules(save.state && save.state.rules ? save.state.rules : {roundCount:save.state && save.state.maxRounds});
+    const round = save.state && save.state.round ? 'Round '+save.state.round : '';
+    return '<div class="save-row">' +
+      '<div class="save-info"><div class="save-name">'+esc(save.name || 'Unnamed save')+'</div>' +
+      '<div class="save-meta">'+esc([round,ruleSummary(rules),date].filter(Boolean).join(' · '))+'</div></div>' +
+      '<div class="save-actions"><button class="mini-btn" data-load="'+save.id+'">Load</button>' +
+      '<button class="mini-btn danger" data-delete="'+save.id+'">Delete</button></div></div>';
+  }).join('');
+}
+function checkboxRow(id,title,note,checked){
+  return '<label class="setting-row" for="'+id+'"><span class="setting-copy"><b>'+title+'</b><small>'+note+'</small></span>'+
+    '<span class="setting-control"><input type="checkbox" id="'+id+'" '+(checked?'checked':'')+'></span></label>';
+}
+async function showSettings(fromGame){
+  const root = $('modalRoot');
+  root.innerHTML = '';
+  const activeGame=!!(fromGame && state && !state.over);
+  const stored=readSettings();
+  const currentTheme=stored.theme;
+  const rules=normalizeRules(activeGame ? state.rules : stored.gameDefaults);
+  const lock=activeGame?' disabled':'';
+  const ov = document.createElement('div'); ov.className='overlay';
+  const m = document.createElement('div'); m.className='modal';
+  m.innerHTML =
+    '<h2>Settings</h2>' +
+    '<div class="settings-block"><h3>Appearance</h3>' +
+      '<div class="theme-grid">' + Object.entries(THEMES).map(([key,item])=>
+        '<button class="theme-option'+(key===currentTheme?' active':'')+'" data-theme="'+key+'">' +
+        '<span class="theme-swatch '+key+'"></span><span><b>'+item.name+'</b><small>'+item.note+'</small></span></button>'
+      ).join('') + '</div></div>' +
+    '<div class="settings-block"><h3>'+(activeGame?'Current game rules':'New game rules')+'</h3>' +
+      '<div class="rule-grid">' +
+        checkboxRow('discardNegativeSetting','Activate negative values when discarded from hand','When off, hand-discarded negative cards have no hour effect.',rules.discardNegativeFromHand) +
+        checkboxRow('helperAlertSetting','Attached helpers can block Alerts','Extension or Nepotism protects its attached card from Fired!, Recession, and Amnesia.',rules.helpersBlockAlerts) +
+        checkboxRow('notifySetting','Show event pop-ups','Show a pop-up when an Alert is drawn or a weapon is played on you.',rules.notifyEvents) +
+      '</div>' +
+      '<div class="radio-stack" style="margin-top:9px;"><div class="setting-copy"><b>Helper timing</b><small>Choose whether helper cards are free reactions/actions or use the player’s turn.</small></div>' +
+        '<label class="radio-line"><input type="radio" name="helperTiming" value="any" '+(rules.helpersAnyTime?'checked':'')+'> Use helpers free at any point</label>' +
+        '<label class="radio-line"><input type="radio" name="helperTiming" value="turn" '+(!rules.helpersAnyTime?'checked':'')+'> Only on your turn, as your action</label></div>' +
+      '<div class="sub-settings">' +
+        '<div class="sub-setting"><label for="handSizeSetting">Starting hand size</label><input type="number" id="handSizeSetting" min="1" max="10" value="'+rules.startingHandSize+'"'+lock+'></div>' +
+        '<div class="sub-setting"><label for="roundCountSetting">Round limit</label><input type="number" id="roundCountSetting" min="1" max="100" value="'+rules.roundCount+'"'+lock+'></div>' +
+        '<div class="sub-setting"><label for="goalHoursSetting">Goal hours</label><input type="number" id="goalHoursSetting" min="1" max="999" value="'+rules.goalHours+'"'+lock+'></div>' +
+      '</div>' +
+      '<div class="sub-settings" style="grid-template-columns:minmax(0,1fr);">' +
+        '<div class="sub-setting"><label for="deckSizeSetting">Finite deck size</label><input type="number" id="deckSizeSetting" min="'+(rules.startingHandSize*3)+'" max="500" value="'+rules.deckSize+'"'+lock+'></div>' +
+      '</div>' +
+      '<div class="radio-stack" style="margin-top:9px;"><div class="setting-copy"><b>End condition</b><small>Only the selected condition ends the game.</small></div>' +
+        '<label class="radio-line"><input type="radio" name="endType" value="rounds" '+(rules.endType==='rounds'?'checked':'')+lock+'> Round count met</label>' +
+        '<label class="radio-line"><input type="radio" name="endType" value="goal" '+(rules.endType==='goal'?'checked':'')+lock+'> Goal hours reached</label>' +
+        '<label class="radio-line"><input type="radio" name="endType" value="deck" '+(rules.endType==='deck'?'checked':'')+lock+'> All finite-deck cards played or discarded</label></div>' +
+      '<p class="settings-note">'+(activeGame?'Starting hand size and end-condition setup are locked after dealing. The card-rule switches remain editable and are stored when you save this game.':'These rules are copied into each new game and then stored inside every named save.')+'</p>' +
+    '</div>' +
+    '<p id="settingsStatus" style="font-size:11px;margin:12px 0 10px;">'+(activeGame?'Editing this game’s saved rule set.':'Editing defaults for the next new game.')+'</p>' +
+    '<div class="choices"><button class="btn" id="applySettingsBtn">Apply game settings</button><button class="btn ghost" id="settingsBackBtn">Back to menu</button></div>';
+  ov.appendChild(m); root.appendChild(ov);
+  m.querySelectorAll('[data-theme]').forEach(btn=>btn.onclick=()=>{
+    const chosen = applyTheme(btn.dataset.theme);
+    m.querySelectorAll('[data-theme]').forEach(x=>x.classList.toggle('active',x.dataset.theme===chosen));
+  });
+  $('applySettingsBtn').onclick=()=>{
+    const proposed=normalizeRules({
+      discardNegativeFromHand:$('discardNegativeSetting').checked,
+      helpersBlockAlerts:$('helperAlertSetting').checked,
+      helpersAnyTime:m.querySelector('input[name="helperTiming"]:checked').value==='any',
+      startingHandSize:$('handSizeSetting').value,
+      endType:(m.querySelector('input[name="endType"]:checked')||{}).value || rules.endType,
+      roundCount:$('roundCountSetting').value,
+      goalHours:$('goalHoursSetting').value,
+      deckSize:$('deckSizeSetting').value,
+      notifyEvents:$('notifySetting').checked
+    });
+    if (activeGame){
+      const fixed=normalizeRules(state.rules);
+      proposed.startingHandSize=fixed.startingHandSize;
+      proposed.endType=fixed.endType;
+      proposed.roundCount=fixed.roundCount;
+      proposed.goalHours=fixed.goalHours;
+      proposed.deckSize=fixed.deckSize;
+      state.rules=normalizeRules(proposed);
+      state.maxRounds=state.rules.roundCount;
+      $('settingsStatus').textContent='Current game rules updated. Save the game to preserve these changes.';
+      render();
+    } else {
+      saveGameDefaults(proposed);
+      $('settingsStatus').textContent='New-game defaults saved: '+ruleSummary(proposed)+'.';
+    }
+  };
+  $('settingsBackBtn').onclick = ()=>showStart(fromGame);
+}
+async function showStart(fromGame, statusText){
   const root = $('modalRoot');
   root.innerHTML = '';
   const ov = document.createElement('div'); ov.className='overlay';
   const m = document.createElement('div'); m.className='modal';
+  const saves = readSaveList();
+  const canResume = !!(fromGame && safeSavePoint());
+  const defaults=readSettings().gameDefaults;
+  const shownRules=canResume ? gameRules() : defaults;
+  const savedNote = saves.length ? saves.length+' named save'+(saves.length===1?'':'s')+' in this browser' : 'No named saves yet';
   m.innerHTML =
     '<h2 style="font-size:22px; letter-spacing:5px;">CLOCKED&nbsp;IN</h2>' +
-    '<p>Log more <b style="color:var(--brass)">hours</b> than Dana and Marcus before closing time. Each turn: draw a card and take one action, or skip. Cards on your desk earn (or bleed) hours every round — bank them before they expire. Weapons ruin days. Alerts ruin everyone\u2019s.</p>' +
-    '<p style="display:flex;align-items:center;gap:10px;">Rounds: <input type="number" id="roundsInput" min="8" max="40" value="15"> <span style="font-size:11px;color:var(--text-dim)">(15 recommended — long enough for Professional to pay out)</span></p>' +
-    '<div class="choices"><button class="btn" id="startBtn">Punch in</button></div>' +
-    '<p style="margin-top:12px;font-size:11px;">All rulebook ambiguities are resolved in the <b>House rules</b> panel, bottom-right.</p>';
+    '<p>Log more <b style="color:var(--brass)">hours</b> than Dana and Marcus before closing time. Saves stay in this browser on this device.</p>' +
+    '<div class="settings-summary"><b>'+(canResume?'Current game':'Next new game')+':</b> '+esc(ruleSummary(shownRules))+'</div>' +
+    '<div class="choices" style="margin-top:12px;">' +
+      (canResume ? '<button class="btn" id="resumeBtn">Resume game</button>' : '') +
+      '<button class="btn ghost" id="settingsBtn">'+(canResume?'Game settings':'Settings & game setup')+'</button>' +
+    '</div>' +
+    (canResume ? '<div class="menu-section"><div class="menu-section-head"><h3>Save current game</h3></div>' +
+      '<div class="save-create"><input type="text" id="saveNameInput" maxlength="40" placeholder="Example: Round 6 — strong start">' +
+      '<button class="btn ghost" id="saveBtn">Save</button></div></div>' : '') +
+    '<div class="menu-section"><div class="menu-section-head"><h3>Named saves</h3><span style="font-size:11px;color:var(--text-dim)">'+saves.length+'</span></div>' +
+      '<div class="save-list" id="saveList">'+saveRowsHTML(saves)+'</div></div>' +
+    '<div class="menu-section"><div class="choices"><button class="btn ghost" id="startBtn">Start new game</button></div></div>' +
+    '<p id="menuStatus" style="margin-top:12px;font-size:11px;">'+esc(statusText || savedNote)+'</p>' +
+    '<p style="margin-top:8px;font-size:11px;">Game-specific settings are stored inside each named save. Themes remain global.</p>';
   ov.appendChild(m); root.appendChild(ov);
-  document.getElementById('startBtn').onclick = ()=>{
-    let r = parseInt(document.getElementById('roundsInput').value, 10);
-    if (isNaN(r)) r = 15;
-    r = Math.max(8, Math.min(40, r));
+
+  const resumeBtn = $('resumeBtn');
+  if (resumeBtn) resumeBtn.onclick = ()=>{ root.innerHTML=''; render(); };
+  $('settingsBtn').onclick = ()=>showSettings(fromGame);
+
+  const saveBtn = $('saveBtn');
+  if (saveBtn) saveBtn.onclick = ()=>{
+    const input = $('saveNameInput');
+    const name = input.value.trim();
+    const duplicate = saves.find(x=>String(x.name||'').toLowerCase()===name.toLowerCase());
+    if (duplicate && !confirm('Replace the existing save named "'+duplicate.name+'"?')) return;
+    const result = saveCurrentGame(name);
+    if (result.ok){
+      showStart(true, result.updated ? 'Updated “'+result.save.name+'”.' : 'Saved “'+result.save.name+'”.');
+    } else {
+      $('menuStatus').textContent = result.reason;
+      input.focus();
+    }
+  };
+
+  $('saveList').onclick = ev=>{
+    const loadBtn = ev.target.closest('[data-load]');
+    if (loadBtn){
+      if (!loadSavedGame(loadBtn.dataset.load)) $('menuStatus').textContent = 'That saved game could not be loaded.';
+      return;
+    }
+    const deleteBtn = ev.target.closest('[data-delete]');
+    if (deleteBtn){
+      const save = saves.find(x=>x.id===deleteBtn.dataset.delete);
+      if (!save) return;
+      if (confirm('Delete the save “'+save.name+'”?')){
+        const ok = deleteSavedGame(save.id);
+        showStart(fromGame, ok ? 'Deleted “'+save.name+'”.' : 'That save could not be deleted.');
+      }
+    }
+  };
+
+  $('startBtn').onclick = ()=>{
     root.innerHTML = '';
-    startGame(r);
+    startGame(readSettings().gameDefaults);
   };
 }
-showStart();
+
+showStart(false);
 </script>
 </body>
 </html>
